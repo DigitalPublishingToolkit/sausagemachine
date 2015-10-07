@@ -1,17 +1,19 @@
 <?php
 
-// XXX: check
-
-// copy the content of $src into $dst
-// not checked: symlinks, umask
+/**
+ *	Copy the content of a directory
+ *	@param $src path to a file or directory
+ *	@param $dst path to a file or directory
+ *	@return true if successful, false if not
+ */
 function cp_recursive($src, $dst) {
-	if (@is_file($src)) {
+	if (is_file($src)) {
 		return @copy($src, $dst);
-	} else if (@is_dir($src)) {
+	} else if (is_dir($src)) {
 		if (($childs = @scandir($src)) === false) {
 			return false;
 		}
-		if (!@is_dir(rtrim($dst, '/'))) {
+		if (!is_dir(rtrim($dst, '/'))) {
 			if (false === @mkdir(rtrim($dst, '/'))) {
 				return false;
 			}
@@ -21,7 +23,7 @@ function cp_recursive($src, $dst) {
 			if ($child == '.' || $child == '..') {
 				continue;
 			}
-			if (false === cp_recursive(rtrim($src, '/').'/'.$child, rtrim($dst, '/').'/'.$child)) {
+			if (false === cp_recursive(rtrim($src, '/') . '/' . $child, rtrim($dst, '/') . '/' . $child)) {
 				$success = false;
 			}
 		}
@@ -29,17 +31,16 @@ function cp_recursive($src, $dst) {
 	}
 }
 
-// XXX: taken from Hotglue
-
 /**
- *	delete a file or directory
+ *	Delete a file or directory
  *
+ *	Function taken from Hotglue's util.inc.php.
  *	@param string $f file name
  *	@return true if successful, false if not
  */
 function rm_recursive($f)
 {
-	if (@is_file($f) || @is_link($f)) {
+	if (is_file($f) || is_link($f)) {
 		// note: symlinks get deleted right away, and not recursed into
 		return @unlink($f);
 	} else {
@@ -54,7 +55,7 @@ function rm_recursive($f)
 			if ($child == '.' || $child == '..') {
 				continue;
 			} else {
-				rm_recursive($f.'/'.$child);
+				rm_recursive($f . '/' . $child);
 			}
 		}
 		return @rmdir($f);

@@ -217,6 +217,25 @@ function release_repo($tmp_key) {
 }
 
 /**
+ *	Commit changes to a Git repository
+ *	@param $tmp_key tmp key
+ *	@param $msg commit message
+ *	@param $author commit author
+ *	@return true if successful, false if not
+ */
+function repo_commit($tmp_key, $msg, $author = 'Git User <username@example.edu>') {
+	$old_cwd = getcwd();
+	@chdir(tmp_dir($tmp_key));
+	@exec('git commit -a --author=' . escapeshellarg($author) . ' -m ' . escapeshellarg($msg) . ' 2>&1', $out, $ret_val);
+	@chdir($old_cwd);
+	if ($ret_val !== 0) {
+		return false;
+	} else {
+		return true;
+	}
+}
+
+/**
  *	Return all modified files in the working directory of a Git repository
  *	@param $tmp_key tmp_key
  *	@return array of filenames, or false if unsuccessful
@@ -248,6 +267,51 @@ function repo_has_modified_files($tmp_key) {
 	}
 }
 
+/**
+ *	Push all branches of a Git repository to a remote URL
+ *	@param $tmp_key tmp key
+ *	@param $url Git Push URL (e.g. ssh://git@github.com/...)
+ *	@return true if successful, false if not
+ */
+function repo_push($tmp_key, $url) {
+	$old_cwd = getcwd();
+	@chdir(tmp_dir($tmp_key));
+	@exec('git push --all ' . escapeshellarg($url). ' 2>&1', $out, $ret_val);
+	@chdir($old_cwd);
+	if ($ret_val === 1) {
+		// not fast-forward, tell caller to fetch & try again
+		return NULL;
+	} else if ($ret_val !== 0) {
+		return false;
+	} else {
+		return true;
+	}
+}
+
+/**
+ *	Reset the index of a Git repository to some earlier state
+ *	@param $tmp_key tmp key
+ *	@param $offset 1 rewinds to the second most recent commit
+ *	@return true if successful, false if not
+ */
+function repo_rewind($tmp_key, $offset = 1) {
+	$old_cwd = getcwd();
+	@chdir(tmp_dir($tmp_key));
+	@exec('git reset --hard HEAD~' . intval($offset) . ' 2>&1', $out, $ret_val);
+	@chdir($old_cwd);
+	if ($ret_val !== 0) {
+		return false;
+	} else {
+		return true;
+	}
+}
+
+/**
+ *	Add files to be committed
+ *	@param $tmp_key tmp_key
+ *	@param $files array of filenames
+ *	@return true if successful, false if not
+ */
 function repo_stage_files($tmp_key, $files = array()) {
 	$old_cwd = getcwd();
 	@chdir(tmp_dir($tmp_key));
@@ -286,56 +350,5 @@ function tmp_key() {
 		return strval(floor($_SERVER['REQUEST_TIME_FLOAT']*10000));
 	} else {
 		return strval(floor(microtime(true)*10000));
-	}
-}
-
-
-// XXX: check
-
-
-function repo_commit($tmp_key, $msg, $author = 'Git User <username@example.edu>') {
-	$old_cwd = getcwd();
-	@chdir('content/tmp/'.$tmp_key);
-	// XXX: escape arguments
-	@exec('git commit -a --author="'.$author.'" -m "'.$msg.'"', $out, $ret_val);
-	@chdir($old_cwd);
-	if ($ret_val !== 0) {
-		return false;
-	} else {
-		return true;
-	}
-}
-
-function repo_push($tmp_key, $url) {
-	$old_cwd = getcwd();
-	@chdir('content/tmp/'.$tmp_key);
-	@exec('git push --all '.$url, $out, $ret_val);
-	@chdir($old_cwd);
-	if ($ret_val === 1) {
-		// not fast-forward, tell caller to fetch & try again
-		return NULL;
-	} else if ($ret_val !== 0) {
-		return false;
-	} else {
-		return true;
-	}
-	// XXX: also pull/rebase
-	// XXX: helper functions for 'content/..'
-	// XXX: chroot.inc.php
-}
-
-function repo_rewind($tmp_key, $offset = 1) {
-	$old_cwd = getcwd();
-	@chdir('content/tmp/'.$tmp_key);
-	if ($offset !== 0) {
-		@exec('git reset --hard HEAD~'.$offset, $out, $ret_val);
-	} else {
-		@exec('git reset --hard', $out, $ret_val);
-	}
-	@chdir($old_cwd);
-	if ($ret_val !== 0) {
-		return false;
-	} else {
-		return true;
 	}
 }
