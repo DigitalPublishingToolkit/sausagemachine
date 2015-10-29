@@ -237,7 +237,7 @@ function repo_commit($tmp_key, $msg, $author = 'Git User <username@example.edu>'
 
 /**
  *	Return all modified files in the working directory of a Git repository
- *	@param $tmp_key tmp_key
+ *	@param $tmp_key tmp key
  *	@return array of filenames, or false if unsuccessful
  */
 function repo_get_modified_files($tmp_key) {
@@ -308,7 +308,7 @@ function repo_rewind($tmp_key, $offset = 1) {
 
 /**
  *	Add files to be committed
- *	@param $tmp_key tmp_key
+ *	@param $tmp_key tmp key
  *	@param $files array of filenames
  *	@return true if successful, false if not
  */
