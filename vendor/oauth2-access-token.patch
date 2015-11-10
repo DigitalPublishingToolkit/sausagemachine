@@ -1,0 +1,30 @@
+diff -ur OAuth2_orig/Client.php OAuth2_mod/Client.php
+--- OAuth2_orig/Client.php	2015-08-03 13:57:44.000000000 +0200
++++ OAuth2_mod/Client.php	2015-08-26 14:02:06.000000000 +0200
+@@ -42,6 +42,7 @@
+     const ACCESS_TOKEN_BEARER   = 1;
+     const ACCESS_TOKEN_OAUTH    = 2;
+     const ACCESS_TOKEN_MAC      = 3;
++    const ACCESS_TOKEN_TOKEN    = 4;
+ 
+     /**
+     * Different Grant types
+@@ -301,7 +302,7 @@
+     /**
+      * Set the access token type
+      *
+-     * @param int $type Access token type (ACCESS_TOKEN_BEARER, ACCESS_TOKEN_MAC, ACCESS_TOKEN_URI)
++     * @param int $type Access token type (ACCESS_TOKEN_BEARER, ACCESS_TOKEN_MAC, ACCESS_TOKEN_URI, ACCESS_TOKEN_TOKEN)
+      * @param string $secret The secret key used to encrypt the MAC header
+      * @param string $algorithm Algorithm used to encrypt the signature
+      * @return void
+@@ -346,6 +347,9 @@
+                 case self::ACCESS_TOKEN_MAC:
+                     $http_headers['Authorization'] = 'MAC ' . $this->generateMACSignature($protected_resource_url, $parameters, $http_method);
+                     break;
++                case self::ACCESS_TOKEN_TOKEN:      // for GitHub
++                    $http_headers['Authorization'] = 'token ' . $this->access_token;
++                    break;
+                 default:
+                     throw new Exception('Unknown access token type.', Exception::INVALID_ACCESS_TOKEN_TYPE);
+                     break;
