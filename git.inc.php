@@ -102,14 +102,12 @@ function get_repo($url, $branch = 'master') {
 		@touch(cache_dir($cache_key));
 		// checkout the requested branch
 		@exec('git checkout -f -B ' . escapeshellarg($branch) . ' ' . escapeshellarg('origin/' . $branch) . ' 2>&1', $out, $ret_val);
+		@chdir($old_cwd);
 		if ($ret_val !== 0) {
 			// checking out failed
-			@chdir($old_cwd);
 			@umask($old_umask);
-			var_dump($out);
 			return false;
 		}
-		@chdir($old_cwd);
 
 		// copy to tmp
 		if (false === cp_recursive(cache_dir($cache_key), tmp_dir($tmp_key))) {
