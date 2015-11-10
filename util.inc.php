@@ -32,6 +32,18 @@ function cp_recursive($src, $dst) {
 }
 
 /**
+ *	Return a file's mime type
+ *	@param string $fn file name
+ *	@return string if successful, false if not
+ */
+function get_mime($fn) {
+	$finfo = @finfo_open(FILEINFO_MIME_TYPE);
+	$out = @finfo_file($finfo, $fn);
+	@finfo_close($finfo);
+	return $out;
+}
+
+/**
  *	Delete a file or directory
  *
  *	Function taken from Hotglue's util.inc.php.
