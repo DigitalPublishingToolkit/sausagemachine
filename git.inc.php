@@ -76,38 +76,26 @@ function get_repo($url, $branch = 'master') {
 	}
 	$tmp_key = tmp_key();
 
-	// preserve current working directory
-	$old_cwd = getcwd();
 	// make sure the content directory is set up
 	if (false === check_content_dir()) {
 		return false;
 	}
-	// create directories and files as permissive as possible
-	$old_umask = @umask(0000);
+
+	// XXX: locking
 
 	// serve from cache, if possible, or clone from remote
 	if (is_dir(cache_dir($cache_key))) {
-		@chdir(cache_dir($cache_key));
-		// XXX: lock
-		// make sure the repo is up to date
-		// XXX: this could be rate-limited, only every n minutes
-		@exec('git fetch 2>&1', $out, $ret_val);
-		if ($ret_val !== 0) {
-			// fetching failed
-			@chdir($old_cwd);
-			@umask($old_umask);
+
+		if (false === repo_check_for_update($cache_key)) {
 			return false;
 		}
-		// update file modification time for LRU
-		@touch(cache_dir($cache_key));
-		// checkout the requested branch
-		@exec('git checkout -f -B ' . escapeshellarg($branch) . ' ' . escapeshellarg('origin/' . $branch) . ' 2>&1', $out, $ret_val);
-		@chdir($old_cwd);
-		if ($ret_val !== 0) {
-			// checking out failed
-			@umask($old_umask);
+
+		if (false === repo_checkout_branch($cache_key, $branch)) {
 			return false;
 		}
+
+		// create files and directories as permissive as possible
+		$old_umask = @umask(0000);
 
 		// copy to tmp
 		if (false === cp_recursive(cache_dir($cache_key), tmp_dir($tmp_key))) {
@@ -125,12 +113,21 @@ function get_repo($url, $branch = 'master') {
 			@umask($old_umask);
 			return false;
 		}
+
+		// restore umask
+		@umask($old_umask);
 	} else {
+
+		// create files and directories as permissive as possible
+		$old_umask = @umask(0000);
+
 		// clone repo in tmp
 		if (false === @mkdir(tmp_dir($tmp_key))) {
 			@umask($old_umask);
 			return false;
 		}
+
+		$old_cwd = getcwd();
 		@chdir(tmp_dir($tmp_key));
 		@exec('git clone -b ' . escapeshellarg($branch) . ' ' . escapeshellarg($url) . ' . 2>&1', $out, $ret_val);
 		@chdir($old_cwd);
@@ -140,10 +137,10 @@ function get_repo($url, $branch = 'master') {
 			@umask($old_umask);
 			return false;
 		}
-	}
 
-	// back to original umask
-	@umask($old_umask);
+		// restore umask
+		@umask($old_umask);
+	}
 
 	return $tmp_key;
 }
@@ -231,6 +228,44 @@ function repo_commit($tmp_key, $msg, $author = 'Git User <username@example.edu>'
 	} else {
 		return true;
 	}
+}
+
+function repo_check_for_update($cache_key, $force = false) {
+	$mtime = @filemtime(cache_dir($cache_dir));
+	if ($mtime === false) {
+		return false;
+	}
+
+	if (!$force && time()-$mtime < config('repo_cache_time')) {
+		// current version is recent enough
+		return true;
+	}
+
+	$old_cwd = getcwd();
+	$old_umask = @umask(0000);
+
+	@chdir(cache_dir($cache_key));
+	@exec('git fetch 2>&1', $out, $ret_val);
+	// update file modification time for LRU
+	@touch(cache_dir($cache_key));
+
+	@umask($old_umask);
+	@chdir($old_cwd);
+
+	return ($ret_val === 0);
+}
+
+function repo_checkout_branch($cache_key, $branch = 'master') {
+	$old_cwd = getcwd();
+	$old_umask = @umask(0000);
+
+	@chdir(cache_dir($cache_key));
+	@exec('git checkout -f -B ' . escapeshellarg($branch) . ' ' . escapeshellarg('origin/' . $branch) . ' 2>&1', $out, $ret_val);
+
+	@umask($old_umask);
+	@chdir($old_cwd);
+
+	return ($ret_val === 0);
 }
 
 /**

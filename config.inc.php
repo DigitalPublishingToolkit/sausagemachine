@@ -18,6 +18,8 @@ $config['content_dir'] = 'content';
 $config['default_repo'] = 'https://github.com/DigitalPublishingToolkit/template-test.git';
 // default target selected on the web interface
 $config['default_target'] = 'html';
+// time in seconds after we re-fetch repositories rather than relying on the cache
+$config['repo_cache_time'] = 3600;
 // list of all repositories available on the web interface
 $config['repos'] = array(
 		array(
