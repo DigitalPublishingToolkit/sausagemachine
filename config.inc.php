@@ -12,7 +12,19 @@ $config = array();
 // Defaults
 error_reporting(E_ALL);
 
-$config['content_dir'] = 'content';		// path to store content, must be writable for the webserver process
+// path to store content, must be writable for the webserver process
+$config['content_dir'] = 'content';
+// default repository used for the web interface
+$config['default_repo'] = 'https://github.com/DigitalPublishingToolkit/template-test.git';
+// default target selected on the web interface
+$config['default_target'] = 'html';
+// list of all repositories available on the web interface
+$config['repos'] = array(
+		array(
+			'url' => 'https://github.com/DigitalPublishingToolkit/template-test.git',
+			'description' => 'Default template'
+		)
+	);
 
 // Overwrites
 @include('user_config.inc.php');
