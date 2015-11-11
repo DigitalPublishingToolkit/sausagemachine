@@ -3,6 +3,8 @@
 @require_once('config.inc.php');
 require_once('util.inc.php');
 
+// XXX: locking
+
 /**
  *	Return the cache path for a cache key
  *	@param $key cache key
@@ -10,6 +12,14 @@ require_once('util.inc.php');
  */
 function cache_dir($key) {
 	return rtrim(config('content_dir', 'content'), '/') . '/cache/' . $key;
+}
+
+/**
+ *	Delete repositories in the cache that haven't been used
+ *	@return true if successful, false if not
+ */
+function check_cache_lru() {
+	// XXX
 }
 
 /**
@@ -38,27 +48,11 @@ function check_content_dir() {
 }
 
 /**
- *	Reset a repository to its original state
- *
- *	This also removes uncommitted files.
- *	@param $tmp_key tmp key
- *	@return true if successful, false if not
+ *	Delete leftover copies of repositories in the tmp directory
+ *	@return true if there have been leftover copies, false if not
  */
-function cleanup_repo($tmp_key) {
-	$old_cwd = getcwd();
-	@chdir(tmp_dir($tmp_key));
-	@exec('git reset --hard 2>&1', $out, $ret_val);
-	if ($ret_val !== 0) {
-		@chdir($old_cwd);
-		return false;
-	}
-	@exec('git clean -f -x 2>&1', $out, $ret_val);
-	@chdir($old_cwd);
-	if ($ret_val !== 0) {
-		return false;
-	} else {
-		return true;
-	}
+function check_tmp_dir_age() {
+	// XXX
 }
 
 /**
@@ -70,18 +64,62 @@ function cleanup_repo($tmp_key) {
  *	@return tmp key, or false if unsuccessful
  */
 function get_repo($url, $branch = 'master') {
+	$tmp_key = tmp_key();
+
+	// get the copy of the repo in cache
+	$cache_key = get_repo_in_cache($url);
+	if ($cache_key === false) {
+		return false;
+	}
+
+	// create files and directories as permissive as possible
+	$old_umask = @umask(0000);
+
+	// copy to tmp
+	if (false === cp_recursive(cache_dir($cache_key), tmp_dir($tmp_key))) {
+		// copying failed, remove again
+		rm_recursive(tmp_dir($tmp_key));
+		return false;
+	}
+
+	if ($branch === 'master') {
+		// XXX: why
+		$ret = repo_cleanup($tmp_key);
+	} else {
+		$ret = repo_checkout_branch($tmp_key, $branch);
+		// XXX: needs?
+	}
+
+	@umask($old_umask);
+
+	if ($ret === false) {
+		// copying failed, remove again
+		rm_recursive(tmp_dir($tmp_key));
+		return false;
+	} else {
+		return true;
+	}
+}
+
+/**
+ *	Get a remote Git repo and return the cache key it can be accessed with
+ *	for reading only
+ *
+ *	This will always return the default (master) branch. Don't call release_repo()
+ *	together with this function.
+ *	@param $url Git (clone) URL
+ *	@return cache key, or false if unsuccessful
+ */
+function get_repo_in_cache($url) {
 	$cache_key = git_url_to_cache_key($url);
 	if ($cache_key === false) {
 		return false;
 	}
-	$tmp_key = tmp_key();
 
 	// make sure the content directory is set up
 	if (false === check_content_dir()) {
 		return false;
 	}
-
-	// XXX: locking
 
 	// serve from cache, if possible, or clone from remote
 	if (is_dir(cache_dir($cache_key))) {
@@ -89,60 +127,14 @@ function get_repo($url, $branch = 'master') {
 		if (false === repo_check_for_update($cache_key)) {
 			return false;
 		}
-
-		if (false === repo_checkout_branch($cache_key, $branch)) {
-			return false;
-		}
-
-		// create files and directories as permissive as possible
-		$old_umask = @umask(0000);
-
-		// copy to tmp
-		if (false === cp_recursive(cache_dir($cache_key), tmp_dir($tmp_key))) {
-			// copying failed, remove again
-			rm_recursive(tmp_dir($tmp_key));
-			@umask($old_umask);
-			return false;
-		}
-		// after copying the files from the cache some might end up with the wrong permissions
-		// due to PHP's umask etc, so clean up the repository one more time, to ensure we have
-		// a clean working copy
-		if (false === cleanup_repo($tmp_key)) {
-			// cleaning failed, remove repo in tmp
-			rm_recursive(tmp_dir($tmp_key));
-			@umask($old_umask);
-			return false;
-		}
-
-		// restore umask
-		@umask($old_umask);
 	} else {
 
-		// create files and directories as permissive as possible
-		$old_umask = @umask(0000);
-
-		// clone repo in tmp
-		if (false === @mkdir(tmp_dir($tmp_key))) {
-			@umask($old_umask);
+		if (false === repo_add_to_cache($url)) {
 			return false;
 		}
-
-		$old_cwd = getcwd();
-		@chdir(tmp_dir($tmp_key));
-		@exec('git clone -b ' . escapeshellarg($branch) . ' ' . escapeshellarg($url) . ' . 2>&1', $out, $ret_val);
-		@chdir($old_cwd);
-		if ($ret_val !== 0) {
-			// cloning failed, remove repo in tmp
-			rm_recursive(tmp_dir($tmp_key));
-			@umask($old_umask);
-			return false;
-		}
-
-		// restore umask
-		@umask($old_umask);
 	}
 
-	return $tmp_key;
+	return $cache_key;
 }
 
 /**
@@ -167,48 +159,115 @@ function git_url_to_cache_key($url) {
 }
 
 /**
- *	Release a Git repository that was referenced by get_repo()
- *
+ *	Release a repository after it is no longer been used
  *	@param $tmp_key tmp key
- *	@return true if sucessful, false if not
+ *	@return true if successful, false if not
  */
 function release_repo($tmp_key) {
-	if (!is_dir(tmp_dir($tmp_key))) {
+	return rm_recursive(tmp_dir($tmp_key));
+}
+
+/**
+ *	Helper function to add a remote repository to the cache
+ *
+ *	Called by get_repo_in_cache().
+ *	@param $url Git (clone) URL
+ *	@return true if successful, false if not
+ */
+function repo_add_to_cache($url) {
+	$cache_key = git_url_to_cache_key($url);
+	if ($cache_key === false) {
 		return false;
 	}
 
-	// get the clone url
+	$old_cwd = getcwd();
+	$old_umask = @umask(0000);
+
+	// create directory in cache
+	if (false === @mkdir(cache_dir($cache_key))) {
+		@umask($old_umask);
+		return false;
+	}
+
+	@chdir(cache_key($cache_key));
+	// all repos in cache are on the master branch
+	@exec('git clone -b master ' . escapeshellarg($url) . ' . 2>&1', $out, $ret_val);
+
+	@umask($old_umask);
+	@chdir($old_cwd);
+
+	if ($ret_val !== 0) {
+		// cloning failed, remote directory in cache
+		rm_recursive(tmp_dir($cache_key));
+		return false;
+	} else {
+		return true;
+	}
+}
+
+// XXX
+function repo_check_for_update($cache_key, $force = false) {
+	$mtime = @filemtime(cache_dir($cache_dir));
+	if ($mtime === false) {
+		return false;
+	}
+
+	if (!$force && time()-$mtime < config('repo_cache_time')) {
+		// current version is recent enough
+		return true;
+	}
+
+	$old_cwd = getcwd();
+	$old_umask = @umask(0000);
+
+	// update file modification time for LRU
+	@touch(cache_dir($cache_key));
+
+	@chdir(cache_dir($cache_key));
+	@exec('git fetch 2>&1', $out, $ret_val);
+
+	@umask($old_umask);
+	@chdir($old_cwd);
+
+	return ($ret_val === 0);
+}
+
+// XXX
+function repo_checkout_branch($tmp_key, $branch = 'master') {
+	$old_cwd = getcwd();
+	$old_umask = @umask(0000);
+
+	@chdir(tmp_dir($tmp_key));
+	@exec('git checkout -f -B ' . escapeshellarg($branch) . ' ' . escapeshellarg('origin/' . $branch) . ' 2>&1', $out, $ret_val);
+
+	@umask($old_umask);
+	@chdir($old_cwd);
+
+	return ($ret_val === 0);
+}
+
+/**
+ *	Reset a repository to its original state
+ *
+ *	This also removes uncommitted files.
+ *	@param $tmp_key tmp key
+ *	@return true if successful, false if not
+ */
+function repo_cleanup($tmp_key) {
 	$old_cwd = getcwd();
 	@chdir(tmp_dir($tmp_key));
-	@exec('git config --get remote.origin.url 2>&1', $out, $ret_val);
-	@chdir($old_cwd);
+	@exec('git reset --hard 2>&1', $out, $ret_val);
 	if ($ret_val !== 0) {
-		// error getting the url
-		rm_recursive(tmp_dir($tmp_key));
+		@chdir($old_cwd);
 		return false;
 	}
-
-	// check if repo is already in cache
-	$cache_key = git_url_to_cache_key($out[0]);
-	if (is_dir(cache_dir($cache_key))) {
-		// already cached
-		rm_recursive(tmp_dir($tmp_key));
+	@exec('git clean -f -x 2>&1', $out, $ret_val);
+	@chdir($old_cwd);
+	if ($ret_val !== 0) {
+		return false;
 	} else {
-		// not yet cached, clean up
-		if (false === cleanup_repo($tmp_key)) {
-			// error cleaning up
-			rm_recursive(tmp_dir($tmp_key));
-			return false;
-		}
-		// and move to the cache directory
-		if (false === @rename(tmp_dir($tmp_key), cache_dir($cache_key))) {
-			// error moving to cache directory
-			rm_recursive(tmp_dir($tmp_key));
-			return false;
-		}
+		return true;
 	}
-
-	return true;
 }
 
 /**
@@ -228,44 +287,6 @@ function repo_commit($tmp_key, $msg, $author = 'Git User <username@example.edu>'
 	} else {
 		return true;
 	}
-}
-
-function repo_check_for_update($cache_key, $force = false) {
-	$mtime = @filemtime(cache_dir($cache_dir));
-	if ($mtime === false) {
-		return false;
-	}
-
-	if (!$force && time()-$mtime < config('repo_cache_time')) {
-		// current version is recent enough
-		return true;
-	}
-
-	$old_cwd = getcwd();
-	$old_umask = @umask(0000);
-
-	@chdir(cache_dir($cache_key));
-	@exec('git fetch 2>&1', $out, $ret_val);
-	// update file modification time for LRU
-	@touch(cache_dir($cache_key));
-
-	@umask($old_umask);
-	@chdir($old_cwd);
-
-	return ($ret_val === 0);
-}
-
-function repo_checkout_branch($cache_key, $branch = 'master') {
-	$old_cwd = getcwd();
-	$old_umask = @umask(0000);
-
-	@chdir(cache_dir($cache_key));
-	@exec('git checkout -f -B ' . escapeshellarg($branch) . ' ' . escapeshellarg('origin/' . $branch) . ' 2>&1', $out, $ret_val);
-
-	@umask($old_umask);
-	@chdir($old_cwd);
-
-	return ($ret_val === 0);
 }
 
 /**
