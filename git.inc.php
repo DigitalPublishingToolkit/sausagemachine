@@ -4,22 +4,23 @@
 require_once('util.inc.php');
 
 // XXX: locking
+// XXX: invalidate cache after push?
 
 /**
- *	Return the cache path for a cache key
- *	@param $key cache key
+ *	Return the path for a cache key
+ *	@param $cache_key cache key
  *	@return string, without tailing slash
  */
-function cache_dir($key) {
-	return rtrim(config('content_dir', 'content'), '/') . '/cache/' . $key;
+function cache_dir($cache_key) {
+	return rtrim(config('content_dir', 'content'), '/') . '/cache/' . $cache_key;
 }
 
 /**
- *	Delete repositories in the cache that haven't been used
+ *	Delete repositories in the cache that haven't been used recently
  *	@return true if successful, false if not
  */
 function check_cache_lru() {
-	// XXX
+	// XXX: implement
 }
 
 /**
@@ -52,13 +53,14 @@ function check_content_dir() {
  *	@return true if there have been leftover copies, false if not
  */
 function check_tmp_dir_age() {
-	// XXX
+	// XXX: implement
 }
 
 /**
- *	Get a remote Git repo and return the tmp key it can accessed with
+ *	Get a private copy of a remote Git repository
  *
- *	Call release_repo() with the tmp key, after it is no longer needed.
+ *	The private copy can be manipulated with the returned tmp key. Call
+ *	release_repo() after it is no longer needed.
  *	@param $url Git (clone) URL
  *	@param $branch branch to check out (default is "master")
  *	@return tmp key, or false if unsuccessful
@@ -66,7 +68,7 @@ function check_tmp_dir_age() {
 function get_repo($url, $branch = 'master') {
 	$tmp_key = tmp_key();
 
-	// get the copy of the repo in cache
+	// get a cached copy, currently on the master branch
 	$cache_key = get_repo_in_cache($url);
 	if ($cache_key === false) {
 		return false;
@@ -79,15 +81,16 @@ function get_repo($url, $branch = 'master') {
 	if (false === cp_recursive(cache_dir($cache_key), tmp_dir($tmp_key))) {
 		// copying failed, remove again
 		rm_recursive(tmp_dir($tmp_key));
+		@umask($old_umask);
 		return false;
 	}
 
 	if ($branch === 'master') {
-		// XXX: why
+		// XXX: test & document why
 		$ret = repo_cleanup($tmp_key);
 	} else {
 		$ret = repo_checkout_branch($tmp_key, $branch);
-		// XXX: needs?
+		// XXX: also needs repo_cleanup()?
 	}
 
 	@umask($old_umask);
@@ -102,8 +105,7 @@ function get_repo($url, $branch = 'master') {
 }
 
 /**
- *	Get a remote Git repo and return the cache key it can be accessed with
- *	for reading only
+ *	Get a remote Git repo for reading (only)
  *
  *	This will always return the default (master) branch. Don't call release_repo()
  *	together with this function.
@@ -123,12 +125,10 @@ function get_repo_in_cache($url) {
 
 	// serve from cache, if possible, or clone from remote
 	if (is_dir(cache_dir($cache_key))) {
-
 		if (false === repo_check_for_update($cache_key)) {
 			return false;
 		}
 	} else {
-
 		if (false === repo_add_to_cache($url)) {
 			return false;
 		}
@@ -159,7 +159,9 @@ function git_url_to_cache_key($url) {
 }
 
 /**
- *	Release a repository after it is no longer been used
+ *	Release a repository after it is no longer being used
+ *
+ *	Use this together with get_repo().
  *	@param $tmp_key tmp key
  *	@return true if successful, false if not
  */
@@ -170,7 +172,7 @@ function release_repo($tmp_key) {
 /**
  *	Helper function to add a remote repository to the cache
  *
- *	Called by get_repo_in_cache().
+ *	Called by get_repo_in_cache(). Assumes that the repository isn't yet cached.
  *	@param $url Git (clone) URL
  *	@return true if successful, false if not
  */
@@ -205,7 +207,12 @@ function repo_add_to_cache($url) {
 	}
 }
 
-// XXX
+/**
+ *	Fetch the remote repository if this hasn't been done recently
+ *	@param $cache_key cache key
+ *	@param $force force a fetch
+ *	@return true if succesful, false if not
+ */
 function repo_check_for_update($cache_key, $force = false) {
 	$mtime = @filemtime(cache_dir($cache_dir));
 	if ($mtime === false) {
@@ -232,7 +239,12 @@ function repo_check_for_update($cache_key, $force = false) {
 	return ($ret_val === 0);
 }
 
-// XXX
+/**
+ *	Switch the branch of a repository
+ *	@param $tmp_key tmp key
+ *	@param $branch branch to check out
+ *	@return true if sucessful, false if not
+ */
 function repo_checkout_branch($tmp_key, $branch = 'master') {
 	$old_cwd = getcwd();
 	$old_umask = @umask(0000);
@@ -386,12 +398,12 @@ function repo_stage_files($tmp_key, $files = array()) {
 }
 
 /**
- *	Return the tmp path for a tmp key
- *	@param $key tmp key
+ *	Return the path for a tmp key
+ *	@param $tmp_key tmp key
  *	@return string, without trailing slash
  */
-function tmp_dir($key) {
-	return rtrim(config('content_dir', 'content'), '/') . '/tmp/' . $key;
+function tmp_dir($tmp_key) {
+	return rtrim(config('content_dir', 'content'), '/') . '/tmp/' . $tmp_key;
 }
 
 /**
