@@ -69,7 +69,7 @@ function get_repo($url, $branch = 'master') {
 	$tmp_key = tmp_key();
 
 	// get a cached copy, currently on the master branch
-	$cache_key = get_repo_in_cache($url);
+	$cache_key = get_repo_for_reading($url);
 	if ($cache_key === false) {
 		return false;
 	}
@@ -99,20 +99,20 @@ function get_repo($url, $branch = 'master') {
 		// copying failed, remove again
 		rm_recursive(tmp_dir($tmp_key));
 		return false;
-	} else {
-		return true;
 	}
+
+	return $tmp_key;
 }
 
 /**
- *	Get a remote Git repo for reading (only)
+ *	Get a remote Git repo for reading only
  *
  *	This will always return the default (master) branch. Don't call release_repo()
  *	together with this function.
  *	@param $url Git (clone) URL
  *	@return cache key, or false if unsuccessful
  */
-function get_repo_in_cache($url) {
+function get_repo_for_reading($url) {
 	$cache_key = git_url_to_cache_key($url);
 	if ($cache_key === false) {
 		return false;
@@ -316,6 +316,19 @@ function repo_get_modified_files($tmp_key) {
 		return false;
 	} else {
 		return $out;
+	}
+}
+
+// XXX
+function repo_get_url($tmp_key) {
+	$old_cwd = getcwd();
+	@chdir(tmp_dir($tmp_key));
+	@exec('git config --get remote.origin.url 2>&1', $out, $ret_val);
+	@chdir($old_cwd);
+	if ($ret_val !== 0) {
+		return false;
+	} else {
+		return $out[0];
 	}
 }
 
