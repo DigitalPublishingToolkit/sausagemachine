@@ -18,14 +18,28 @@ $config['content_dir'] = 'content';
 $config['default_repo'] = 'https://github.com/DigitalPublishingToolkit/template-test.git';
 // default target selected on the web interface
 $config['default_target'] = 'html';
+// blacklist of Makefile targets to hide from being displayed
+$config['ignore_targets'] = array(
+		'book.md',
+		'clean',
+		'folders',
+		'markdowns',
+		'scribus',
+		'test'
+	);
 // time in seconds after we re-fetch repositories rather than relying on the cache
 $config['repo_cache_time'] = 3600;
 // list of all repositories available on the web interface
 $config['repos'] = array(
 		array(
-			'url' => 'https://github.com/DigitalPublishingToolkit/template-test.git',
+			'repo' => 'https://github.com/DigitalPublishingToolkit/template-test.git',
 			'description' => 'Default template'
 		)
+	);
+$config['target_descriptions'] = array(
+		'book.epub' => 'EPUB',
+		'html' => 'Markdown as HTML',
+		'icmls' => 'ICML files for use with Adobe InDesign'
 	);
 
 // Overwrites
