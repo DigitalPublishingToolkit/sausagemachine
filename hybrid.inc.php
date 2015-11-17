@@ -190,10 +190,8 @@ function route_post_upload_files($param = array()) {
 
 	foreach ($_FILES as $file) {
 		$renamed_file = inject_file($tmp_key, $file['tmp_name'], $file['type'], $file['name']);
-		if (is_string($renamed_file)) {
+		if ($renamed_file !== false) {
 			$uploaded[] = $renamed_file;
-		} else {
-			$uploaded = array_merge($uploaded, array($renamed_file));
 		}
 	}
 
@@ -201,7 +199,53 @@ function route_post_upload_files($param = array()) {
 }
 
 function inject_file($tmp_key, $fn, $mime = NULL, $orig_fn = NULL) {
-	// do on the spot conversion of doc
+	$old_umask = @umask(0000);
+
+	switch ($mime) {
+		// XXX: md comes across as application/octet-stream
+		case 'application/font-woff':
+			// supported font formats
+			// XXX: other ones come across as application/octet-stream
+			@mkdir(tmp_key($tmp_key) . '/lib');
+			$renamed_file = array('lib/' . $orig_fn);
+			$ret = @move_uploaded_file($fn, tmp_dir($tmp_key) . '/' . $renamed_file);
+			break;
+		case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+			// docx
+			// XXX: do on the spot conversion
+			// XXX: force basename() and check extension
+			// make sure the directory exists
+			@mkdir(tmp_dir($tmp_key) . '/docx');
+			$renamed_file = array('docx/' . $orig_fn);
+			$ret = @move_uploaded_file($fn, tmp_dir($tmp_key) . '/' . $renamed_file);
+			break;
+		case 'image/gif':
+		case 'image/jpg':
+		case 'image/png':
+			// supported image formats
+			// XXX: special case for cover
+			@mkdir(tmp_dir($tmp_key) . '/md/imgs', 0777, true);
+			$renamed_file = array('md/imgs/' . $orig_fn);
+			$ret = @move_uploaded_file($fn, tmp_dir($tmp_key) . '/' . $renamed_file);
+			break;
+		case 'text/css':
+			// stylesheet
+			// XXX: rename
+			@mkdir(tmp_dir($tmp_key) . '/epub');
+			$renamed_file = array('epub/' . $orig_fn);
+			$ret = @move_uploaded_file($fn, tmp_dir($tmp_key) . '/' . $renamed_file);
+			break;
+		default:
+			// not supported
+			//$ret = false;
+			$ret = true;
+			$renamed_file = $mime;
+			break;
+	}
+
+	@umask($old_umask);
+
+	return ($ret === false) ? false : $renamed_file;
 }
 
 function handle_repo_switch($tmp_key, $new_repo, &$uploaded = array()) {
