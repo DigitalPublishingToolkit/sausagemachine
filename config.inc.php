@@ -18,6 +18,8 @@ $config['content_dir'] = 'content';
 $config['default_repo'] = 'https://github.com/DigitalPublishingToolkit/template-test.git';
 // default target selected on the web interface
 $config['default_target'] = 'html';
+// default view to display
+$config['default_route'] = 'import';
 // blacklist of Makefile targets to hide from being displayed
 $config['ignore_targets'] = array(
 		'book.md',

@@ -4,15 +4,16 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="css/primer.css">
+	<link rel="stylesheet" href="css/sausagemachine.css">
 	<link rel="icon" href="favicon.ico">
 </head>
 <body>
 	<div class="container">
 		<div class="tabnav">
 			<nav class="tabnav-tabs">
-				<a href="#" class="tabnav-tab selected">Import file(s)</a>
-				<a href="view1.html" class="tabnav-tab">Start a book</a>
-				<a href="view2.html" class="tabnav-tab">Book projects</a>
+				<a href="index.php?import" class="tabnav-tab selected">Import file(s)</a>
+				<a href="index.php?edit" class="tabnav-tab">Start a book</a>
+				<a href="index.php?projects" class="tabnav-tab">Book projects</a>
 				<a href="#" class="tabnav-tab">Tools</a>
 			</nav>
 		</div>

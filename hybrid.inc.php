@@ -5,6 +5,27 @@ require_once('git.inc.php');
 require_once('makefile.inc.php');
 
 /**
+ *	Return the edit view
+ */
+function route_get_edit() {
+	return render_php('view-edit.php');
+}
+
+/**
+ *	Return the import view
+ */
+function route_get_import() {
+	return render_php('view-import.php');
+}
+
+/**
+ *	Return the projects view
+ */
+function route_get_projects() {
+	return render_php('view-projects.php');
+}
+
+/**
  *	Return a list of (template) repositories
  */
 function route_get_repos($param = array()) {
@@ -23,8 +44,6 @@ function route_get_repos($param = array()) {
 function route_get_user_repos($param = array()) {
 	// XXX
 }
-
-
 
 /**
  *	Convert markdown text to a user-specified Makefile target
