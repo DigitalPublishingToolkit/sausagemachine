@@ -46,9 +46,21 @@
 				var formData = new FormData();
 				xhr.onload = function(e) {
 					var json = JSON.parse(this.response);
-					console.log(json);
-					// store the markdown for now
-					//sessionStorage.markdown = json.markdown;
+					sessionStorage.tmp_key = json.tmp_key;
+					sessionStorage.repo = json.repo;
+					sessionStorage.uploaded = json.uploaded;
+					sessionStorage.files = json.files;
+					// convert to Markdown
+					$.ajax('json.php?convert', {
+						method: 'POST',
+						data: {
+							'tmp_key': json.tmp_key
+						},
+						success: function(data) {
+							console.log(data);
+						}
+					});
+					//success: function(data) {
 					//window.location = 'view1.html';
 				};
 				xhr.open('POST', 'json.php?upload_files');
