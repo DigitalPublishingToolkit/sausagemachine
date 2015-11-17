@@ -237,9 +237,7 @@ function inject_file($tmp_key, $fn, $mime = NULL, $orig_fn = NULL) {
 			break;
 		default:
 			// not supported
-			//$ret = false;
-			$ret = true;
-			$renamed_file = $mime;
+			$ret = false;
 			break;
 	}
 
