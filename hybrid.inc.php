@@ -39,80 +39,6 @@ function route_get_repos($param = array()) {
 }
 
 /**
- *	Return a list of repositories created by users
- */
-function route_get_user_repos($param = array()) {
-	// XXX
-}
-
-/**
- *	Convert markdown text to a user-specified Makefile target
- */
-function route_get_convert($param = array()) {
-	if (!@is_string($param['md'])) {
-		router_bad_request('Missing or invalid argument md');
-	}
-
-	if (@is_string($param['repo'])) {
-		$repo = $param['repo'];
-	} else {
-		$repo = config('default_repo');
-	}
-
-	if (@is_string($param['target'])) {
-		$target = $param['target'];
-	} else {
-		$target = config('default_target');
-	}
-
-	// get a copy of the repo specified
-	$tmp = get_repo($repo);
-	if ($tmp === false) {
-		router_internal_server_error('Cannot get a copy of ' . $repo);
-	}
-
-	// write seed.md
-	if (false === @file_put_contents(tmp_dir($tmp) . '/md/seed.md', $param['md'])) {
-		release_repo($tmp);
-		router_internal_server_error('Cannot write markdown to repo ' . $tmp);
-	}
-
-	// convert
-	$ret = make_run(tmp_dir($tmp), $target, $out);
-	if ($ret !== 0) {
-		// return error to the client
-		release_repo($tmp);
-		return(array('error' => $ret, 'output' => $out));
-	}
-
-	// see which files changed and get a base64 representation
-	$changed = repo_get_modified_files($tmp);
-	$out = array();
-	foreach ($changed as $fn) {
-		if ($fn === 'md/seed.md') {
-			// ignore the file we just created
-			continue;
-		}
-		$data = @file_get_contents(tmp_dir($tmp) . '/' . $fn);
-		if ($data === false) {
-			// ignore errors
-			continue;
-		}
-		$out[] = array(
-			'fn' => $fn,
-			'mime' => get_mime(tmp_dir($tmp) . '/' . $fn),
-			'data' => base64_encode($data)
-		);
-	}
-
-	release_repo(array('generated' => $tmp));
-	return $out;
-}
-
-
-
-
-/**
  *	Return a list of Makefile targets for a (template) repository
  */
 function route_get_targets($param = array()) {
@@ -156,95 +82,195 @@ function route_get_targets($param = array()) {
 	return $targets;
 }
 
+/**
+ *	Return a list of repositories created by users
+ */
+function route_get_user_repos($param = array()) {
+	// XXX
+}
+
+
 function route_post_upload_files($param = array()) {
-	if (@is_string($param['repo'])) {
-		$repo = $parm['repo'];
-	} else {
-		$repo = config('default_repo');
-	}
-
-	if (@is_array($param['uploaded'])) {
-		$uploaded = $parm['uploaded'];
-	} else {
-		$uploaded = array();
-	}
-
 	if (@is_string($param['tmp_key'])) {
-		$tmp_key = $parm['tmp_key'];
-		// check if the repository changed
-		$old_repo = repo_get_url($tmp_key);
-		if ($old_repo === false) {
-			router_internal_server_error('Cannot get URL for ' . $tmp_key);
+		$tmp_key = $param['tmp_key'];
+	} else {
+		// new temporary repository
+		$repo = @is_string($param['repo']) ? $param['repo'] : config('default_repo');
+		$tmp_key = get_repo($repo);
+		if ($tmp_key === false) {
+			router_internal_server_error('Cannot get a copy of ' . $repo);
 		}
-		if ($old_repo !== $repo) {
-			if (false === handle_repo_switch($tmp_key, $repo, $uploaded)) {
-				router_internal_server_error('Error switching ' . $tmp_key . ' to ' . $repo);
+	}
+
+	// add uploaded files
+	$uploaded = array();
+	foreach ($_FILES as $file) {
+		$injected = inject_uploaded_file($tmp_key, $file['tmp_name'], $file['type'], $file['name']);
+		// ignore errors
+		if ($injected !== false) {
+			$uploaded[] = $injected;
+		}
+	}
+
+	return array(
+		'tmp_key' => $tmp_key,
+		'repo' => repo_get_url($tmp_key),
+		'uploaded' => $uploaded,
+		'files' => repo_get_modified_files($tmp_key)
+	);
+}
+
+
+function route_post_convert($param = array()) {
+	if (@is_string($param['tmp_key'])) {
+		$tmp_key = $param['tmp_key'];
+		if (@is_string($param['repo'])) {
+			if (false === check_repo_switch($tmp_key, $param['repo'])) {
+				router_internal_server_error('Error switching ' . $tmp_key . ' to ' . $param['repo']);
 			}
 		}
 	} else {
+		// new temporary repository
+		$repo = @is_string($param['repo']) ? $param['repo'] : config('default_repo');
 		$tmp_key = get_repo($repo);
 		if ($tmp_key === false) {
-			router_internal_server_error('Cannot get ' . $repo);
+			router_internal_server_error('Cannot get a copy of ' . $repo);
 		}
 	}
 
-	foreach ($_FILES as $file) {
-		$renamed_file = inject_file($tmp_key, $file['tmp_name'], $file['type'], $file['name']);
-		if ($renamed_file !== false) {
-			$uploaded[] = $renamed_file;
-		}
+	// clean repository
+	make_run(tmp_dir($tmp_key), 'clean');
+	$after_cleaning = repo_get_modified_files($tmp_key);
+
+	// add updated files
+	$files = @is_array($param['files']) ? $param['files'] : array();
+	foreach ($files as $fn => $content) {
+		// ignore errors
+		inject_file($tmp_key, $fn, $content);
 	}
 
-	return array('tmp_key' => $tmp_key, 'uploaded' => $uploaded);
+	// make target
+	$target = @is_string($param['target']) ? $param['target'] : config('default_target');
+	$ret = make_run(tmp_dir($tmp_key), $target, $out);
+	if ($ret !== 0) {
+		// return the error in JSON instead as a HTTP status code
+		return array(
+			'error' => $out
+		);
+	}
+
+	// established modified files
+	$modified = repo_get_modified_files($tmp_key);
+	$generated = array();
+	foreach ($modified as $fn) {
+		if (in_array($fn, $after_cleaning)) {
+			// file existed earlier
+			continue;
+		}
+		if (in_array($fn, array_keys($files))) {
+			// we uploaded this ourselves
+			continue;
+		}
+		$generated[] = $fn;
+	}
+
+	return array(
+		'tmp_key' => $tmp_key,
+		'repo' => repo_get_url($tmp_key),
+		'target' => $target,
+		'generated' => $generated,
+		'files' => $modified
+	);
 }
 
-function inject_file($tmp_key, $fn, $mime = NULL, $orig_fn = NULL) {
-	$old_umask = @umask(0000);
 
-	switch ($mime) {
-		// XXX: md comes across as application/octet-stream
-		case 'application/font-woff':
-			// supported font formats
-			// XXX: other ones come across as application/octet-stream
-			@mkdir(tmp_key($tmp_key) . '/lib');
-			$renamed_file = array('lib/' . $orig_fn);
-			$ret = @move_uploaded_file($fn, tmp_dir($tmp_key) . '/' . $renamed_file);
+function inject_uploaded_file($tmp_key, $fn, $mime = NULL, $orig_fn = '') {
+	// many relevant file formats still arive as "application/octet-stream"
+	// so ignore the MIME type for now, and focus solely on the extension
+	// of the original filename we got from the browser
+	$ext = strtolower(filext($orig_fn));
+
+	switch ($ext) {
+		case 'css':
+			// CSS
+			$target = 'epub/custom.css';
 			break;
-		case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
-			// docx
-			// XXX: do on the spot conversion
-			// XXX: force basename() and check extension
-			// make sure the directory exists
-			@mkdir(tmp_dir($tmp_key) . '/docx');
-			$renamed_file = array('docx/' . $orig_fn);
-			$ret = @move_uploaded_file($fn, tmp_dir($tmp_key) . '/' . $renamed_file);
+		case 'docx':
+			// Word document
+			$target = 'docx/' . basename($orig_fn);
+			// XXX: instant conversion? (also return "generated" in this case)
 			break;
-		case 'image/gif':
-		case 'image/jpg':
-		case 'image/png':
-			// supported image formats
-			// XXX: special case for cover
-			@mkdir(tmp_dir($tmp_key) . '/md/imgs', 0777, true);
-			$renamed_file = array('md/imgs/' . $orig_fn);
-			$ret = @move_uploaded_file($fn, tmp_dir($tmp_key) . '/' . $renamed_file);
+		case 'gif':
+		case 'png':
+		case 'jpeg':
+		case 'jpg':
+			// Image
+			if (basename($orig_fn, '.' . $ext) == 'cover') {
+				// special case for the cover image
+				// delete any existing one
+				$epub_dir = @scandir(tmp_dir($tmp_key) . '/epub');
+				if (is_array($epub_dir)) {
+					foreach ($epub_dir as $fn) {
+						if (in_array($fn, array('cover.gif', 'cover.png', 'cover.jpeg', 'cover.jpg'))) {
+							@unlink(tmp_dir($tmp_key) . '/epub/' . $fn);
+						}
+					}
+				}
+				$target = 'epub/' . basename($orig_fn);
+			} else {
+				$target = 'md/imgs/ ' . basename($orig_fn);
+			}
 			break;
-		case 'text/css':
-			// stylesheet
-			// XXX: rename
-			@mkdir(tmp_dir($tmp_key) . '/epub');
-			$renamed_file = array('epub/' . $orig_fn);
-			$ret = @move_uploaded_file($fn, tmp_dir($tmp_key) . '/' . $renamed_file);
+		case 'md':
+			// Markdown
+			$target = 'md/' . basename($orig_fn);
+			break;
+		case 'otf':
+		case 'tty':
+		case 'woff':
+		case 'woff2':
+			// Font
+			$target = 'lib/' . basename($orig_fn);
 			break;
 		default:
-			// not supported
-			$ret = false;
+			$target = false;
 			break;
 	}
+
+	if ($target === false) {
+		// not supported
+		return false;
+	}
+
+	// create files and directories as permissive as possible
+	$old_umask = @umask(0000);
+
+	// make sure the containing directory exists
+	$pos = strrpos('/', $target);
+	if ($pos !== false) {
+		@mkdir(tmp_dir($tmp_key) . '/' . substr($target, 0, $pos), 0777, true);
+	}
+
+	// move file to final location
+	$ret = @move_uploaded_file($fn, tmp_dir($tmp_key) . '/' . $target);
 
 	@umask($old_umask);
 
-	return ($ret === false) ? false : $renamed_file;
+	return ($ret) ? $target : false;
 }
+
+
+function inject_file($tmp_key, $fn, $content) {
+	// XXX: implement
+	return false;
+}
+
+
+function check_repo_switch($tmp_key, $repo) {
+	// XXX: implement
+	return true;
+}
+
 
 function handle_repo_switch($tmp_key, $new_repo, &$uploaded = array()) {
 	$staging = get_repo($new_repo);
@@ -269,5 +295,3 @@ function handle_repo_switch($tmp_key, $new_repo, &$uploaded = array()) {
 		router_internal_server_error('Cannot rename ' . $staging . ' to ' . $tmp_key);
 	}
 }
-
-//$push = repo_push($tmp, 'ssh://git@github.com/gohai/test.git');		// supposed to return NULL after the first time
