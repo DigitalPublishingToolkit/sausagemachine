@@ -27,7 +27,7 @@
 				</div>
 				<div>
 					<label><span class="tooltipped tooltipped-n" aria-label="Select one of our repositories to base your work on">Template</span></label>
-					<select id="receipe-sel"></select>
+					<select id="repo-sel"></select>
 				</div>
 				<div>
 					<label><span class="tooltipped tooltipped-n" aria-label="Which format do you want to convert the text to">Output</span></label>
@@ -59,31 +59,37 @@
 							if (this.default) {
 								option.selected = true;
 							}
-							document.getElementById('receipe-sel').appendChild(option);
+							document.getElementById('repo-sel').appendChild(option);
 							updateTargets(this.repo);
 						});
 					}
 				});
 			};
 
-			var updateTargets = function(url) {
-				$.ajax('json.php?targets&url='+url, {	// XXX: move to data
+			var updateTargets = function(repo) {
+				$.ajax('json.php?targets&repo='+repo, {
 					method: 'GET',
 					dataType: 'json',
 					success: function(data) {
-						$.each(data, function(target) {
+						document.getElementById('target-sel').innerHTML = '';
+						$.each(data, function() {
 							var option = document.createElement('option');
-							option.innerHTML = target.description;
-							option.value = target.target;
+							option.innerHTML = this.description;
+							option.value = this.target;
+							if (this.default) {
+								option.selected = true;
+							}
 							document.getElementById('target-sel').appendChild(option);
 						});
 					}
 				});
 			};
 
-			var select = document.getElementById('receipe-sel');
+			var select = document.getElementById('repo-sel');
 			select.addEventListener('change', function(e) {
-				updateRepos();
+				if (this.selectedIndex == -1) {
+					updateTargets(this[this.selectedIndex].value);
+				}
 			});
 
 			updateRepos();
@@ -111,7 +117,7 @@
 
 			var convert = document.getElementById('btn-convert');
 			convert.addEventListener('click', function(e) {
-				var recipe = document.getElementById('receipe-sel').value;
+				var recipe = document.getElementById('repo-sel').value;
 				var target = document.getElementById('target-sel').value;
 				$.ajax('json.php?convert', {
 					method: 'POST',
@@ -151,7 +157,7 @@
 
 			var project = document.getElementById('btn-project');
 			project.addEventListener('click', function(e) {
-				var recipe = document.getElementById('receipe-sel').value;
+				var recipe = document.getElementById('repo-sel').value;
 				var target = document.getElementById('target-sel').value;
 				var repo = prompt('Name the repository');
 				$.ajax('json.php?create_project', {
