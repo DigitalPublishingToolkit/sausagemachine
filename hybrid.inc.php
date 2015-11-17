@@ -193,7 +193,7 @@ function route_post_upload_files($param = array()) {
 		if (is_string($renamed_file)) {
 			$uploaded[] = $renamed_file;
 		} else {
-			$uploaded = array_merge($uploaded, $renamed_file);
+			$uploaded = array_merge($uploaded, array($renamed_file));
 		}
 	}
 
