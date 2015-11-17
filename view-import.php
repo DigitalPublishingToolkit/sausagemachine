@@ -51,7 +51,7 @@
 					//sessionStorage.markdown = json.markdown;
 					//window.location = 'view1.html';
 				};
-				xhr.open('POST', 'json.php?convert_files');
+				xhr.open('POST', 'json.php?upload_files');
 				xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 				for (var i=0; i < e.dataTransfer.files.length; i++) {
 					formData.append('uploads', e.dataTransfer.files[i]);
