@@ -44,6 +44,20 @@ function get_mime($fn) {
 }
 
 /**
+ *	Render a PHP view and return the output as a string
+ *	@param string $fn filename
+ *	@param $data variable to pass to the view
+ *	@return string
+ */
+function render_php($fn, $data = array()) {
+	@ob_start();
+	@include($fn);
+	$ret = @ob_get_contents();
+	@ob_end_clean();
+	return $ret;
+}
+
+/**
  *	Delete a file or directory
  *
  *	Function taken from Hotglue's util.inc.php.
