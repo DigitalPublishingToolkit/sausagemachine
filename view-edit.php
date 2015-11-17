@@ -26,7 +26,7 @@
 					Rendered Markdown
 				</div>
 				<div>
-					<label><span class="tooltipped tooltipped-n" aria-label="Select one of our repositories to base your work on">Recipe book</span></label>
+					<label><span class="tooltipped tooltipped-n" aria-label="Select one of our repositories to base your work on">Template</span></label>
 					<select id="receipe-sel"></select>
 				</div>
 				<div>
@@ -47,17 +47,20 @@
 				document.getElementById('markdown').innerHTML = sessionStorage.markdown;
 			}
 
-			var updateRecipes = function() {
-				$.ajax('json.php?templates', {
+			var updateRepos = function() {
+				$.ajax('json.php?repos', {
 					method: 'GET',
 					dataType: 'json',
 					success: function(data) {
-						_.each(data, function(recipe) {
+						$.each(data, function() {
 							var option = document.createElement('option');
-							option.innerHTML = recipe.description;
-							option.value = recipe.url;
+							option.innerHTML = this.description;
+							option.value = this.repo;
+							if (this.default) {
+								option.selected = true;
+							}
 							document.getElementById('receipe-sel').appendChild(option);
-							updateTargets(recipe.url);
+							updateTargets(this.repo);
 						});
 					}
 				});
@@ -68,7 +71,7 @@
 					method: 'GET',
 					dataType: 'json',
 					success: function(data) {
-						_.each(data, function(target) {
+						$.each(data, function(target) {
 							var option = document.createElement('option');
 							option.innerHTML = target.description;
 							option.value = target.target;
@@ -80,10 +83,10 @@
 
 			var select = document.getElementById('receipe-sel');
 			select.addEventListener('change', function(e) {
-				updateRecipes();
+				updateRepos();
 			});
 
-			updateRecipes();
+			updateRepos();
 
 
 			// taken from http://stackoverflow.com/questions/16245767/creating-a-blob-from-a-base64-string-in-javascript
