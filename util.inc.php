@@ -32,6 +32,20 @@ function cp_recursive($src, $dst) {
 }
 
 /**
+ *	Return a file's extension
+ *	@param string $fn file name
+ *	@return string, excluding the dot
+ */
+function filext($fn) {
+	$pos = strrpos($fn, '.');
+	if ($pos !== false) {
+		return substr($fn, $pos+1);
+	} else {
+		return '';
+	}
+}
+
+/**
  *	Return a file's mime type
  *	@param string $fn file name
  *	@return string if successful, false if not
