@@ -60,7 +60,7 @@ function route_get_repos($param = array()) {
  *	Return a list of Makefile targets for a (template) repository
  */
 function route_get_targets($param = array()) {
-	if (@is_string($param['repo'])) {
+	if (!empty($param['repo'])) {
 		$repo = $param['repo'];
 	} else {
 		$repo = config('default_repo');
@@ -109,11 +109,11 @@ function route_get_user_repos($param = array()) {
 
 
 function route_post_upload_files($param = array()) {
-	if (@is_string($param['tmp_key'])) {
+	if (!empty($param['tmp_key'])) {
 		$tmp_key = $param['tmp_key'];
 	} else {
 		// new temporary repository
-		$repo = @is_string($param['repo']) ? $param['repo'] : config('default_repo');
+		$repo = !empty($param['repo']) ? $param['repo'] : config('default_repo');
 		$tmp_key = get_repo($repo);
 		if ($tmp_key === false) {
 			router_internal_server_error('Cannot get a copy of ' . $repo);
@@ -143,16 +143,16 @@ function route_post_upload_files($param = array()) {
 
 
 function route_post_convert($param = array()) {
-	if (@is_string($param['tmp_key'])) {
+	if (!empty($param['tmp_key'])) {
 		$tmp_key = $param['tmp_key'];
-		if (@is_string($param['repo'])) {
+		if (!empty($param['repo'])) {
 			if (false === check_repo_switch($tmp_key, $param['repo'])) {
 				router_internal_server_error('Error switching ' . $tmp_key . ' to ' . $param['repo']);
 			}
 		}
 	} else {
 		// new temporary repository
-		$repo = @is_string($param['repo']) ? $param['repo'] : config('default_repo');
+		$repo = !empty($param['repo']) ? $param['repo'] : config('default_repo');
 		$tmp_key = get_repo($repo);
 		if ($tmp_key === false) {
 			router_internal_server_error('Cannot get a copy of ' . $repo);
@@ -171,7 +171,7 @@ function route_post_convert($param = array()) {
 	}
 
 	// make target
-	$target = @is_string($param['target']) ? $param['target'] : config('default_target');
+	$target = !empty($param['target']) ? $param['target'] : config('default_target');
 	$ret = make_run(tmp_dir($tmp_key), $target, $out);
 	if ($ret !== 0) {
 		// return the error in JSON instead as a HTTP status code
