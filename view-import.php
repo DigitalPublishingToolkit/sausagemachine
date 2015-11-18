@@ -49,19 +49,20 @@
 					sessionStorage.tmp_key = json.tmp_key;
 					sessionStorage.repo = json.repo;
 					sessionStorage.uploaded = json.uploaded;
+					sessionStorage.generated = json.generated;
 					sessionStorage.files = json.files;
 					// convert to Markdown
 					$.ajax('json.php?convert', {
 						method: 'POST',
 						data: {
-							'tmp_key': json.tmp_key
+							'tmp_key': json.tmp_key,
+							'target': 'html'
 						},
 						success: function(data) {
-							console.log(data);
+							// XXX: update sessionStorage
+							window.location = 'index.php?edit#' + sessionStorage.tmp_key;
 						}
 					});
-					//success: function(data) {
-					//window.location = 'view1.html';
 				};
 				xhr.open('POST', 'json.php?upload_files');
 				xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
