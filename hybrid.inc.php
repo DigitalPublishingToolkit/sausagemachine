@@ -104,11 +104,13 @@ function route_post_upload_files($param = array()) {
 
 	// add uploaded files
 	$uploaded = array();
+	$generated = array();
 	foreach ($_FILES as $file) {
 		$injected = inject_uploaded_file($tmp_key, $file['tmp_name'], $file['type'], $file['name']);
 		// ignore errors
 		if ($injected !== false) {
-			$uploaded[] = $injected;
+			$uploaded = array_merge($uploaded, $injected['uploaded']);
+			$generated = array_merge($generated, $injected['generated']);
 		}
 	}
 
@@ -116,6 +118,7 @@ function route_post_upload_files($param = array()) {
 		'tmp_key' => $tmp_key,
 		'repo' => repo_get_url($tmp_key),
 		'uploaded' => $uploaded,
+		'generated' => $generated,
 		'files' => repo_get_modified_files($tmp_key)
 	);
 }
@@ -198,7 +201,6 @@ function inject_uploaded_file($tmp_key, $fn, $mime = NULL, $orig_fn = '') {
 		case 'docx':
 			// Word document
 			$target = 'docx/' . basename($orig_fn);
-			// XXX: instant conversion? (also return "generated" in this case)
 			break;
 		case 'gif':
 		case 'png':
@@ -254,9 +256,22 @@ function inject_uploaded_file($tmp_key, $fn, $mime = NULL, $orig_fn = '') {
 	// move file to final location
 	$ret = @move_uploaded_file($fn, tmp_dir($tmp_key) . '/' . $target);
 
+	// do an instant conversion for docx
+	$generated = array();
+	if ($ext === 'docx') {
+		$modified_before = repo_get_modified_files($tmp_key);
+		make_run(tmp_dir($tmp_key), 'markdowns', $out);
+		foreach (repo_get_modified_files($tmp_key) as $fn) {
+			if (in_array($fn, $modified_before)) {
+				continue;
+			}
+			$generated[] = $fn;
+		}
+	}
+
 	@umask($old_umask);
 
-	return ($ret) ? $target : false;
+	return ($ret) ? array('uploaded' => array($target), 'generated' => $generated) : false;
 }
 
 
