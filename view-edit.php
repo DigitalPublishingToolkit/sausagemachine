@@ -44,6 +44,13 @@
 	<script src="js/jquery-2.1.4.min.js"></script>
 	<script>
 		$(document).ready(function() {
+
+			var hash = window.location.hash.substring(1);
+			if (hash != sessionStorage.getItem('tmp_key')) {
+				sessionStorage.clear();
+				sessionStorage.setItem('tmp_key', hash);
+			}
+
 			if (sessionStorage.markdown) {
 				document.getElementById('markdown').innerHTML = sessionStorage.markdown;
 			}
@@ -123,6 +130,7 @@
 				$.ajax('json.php?convert', {
 					method: 'POST',
 					data: {
+						'tmp_id': sessionStorage.getItem('tmp_id'),
 						'repo': repo,
 						'target': target,
 						'files': {
@@ -130,6 +138,9 @@
 						}
 					},
 					success: function(data) {
+						sessionStorage.setItem('tmp_id', data.tmp_key);
+						window.location.hash = '#' + data.tmp_key;
+
 						/*
 						var blob = b64toBlob(data.data, data.mime);
 						console.log(blob);
