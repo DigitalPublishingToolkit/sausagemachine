@@ -50,17 +50,21 @@
 		}
 
 		$(document).ready(function() {
+			/*
 			if (getCookie('repo').length) {
 				$('.flash').css('display', 'block');
 				$('#foo').attr('href', 'http://github.com/' + unescape(getCookie('repo')));
 				$('#foo').text(unescape(getCookie('repo')));
 				$('#bar').attr('href', 'github-mac://openRepo/https://github.com/' + unescape(getCookie('repo')));
 			}
+			*/
 
-			$.ajax('json.php?Repositories', {
+			$.ajax('json.php?projects', {
 				method: 'GET',
 				dataType: 'json',
 				success: function(data) {
+					console.log(data);
+					/*
 					_.each(data, function(repository, key) {
 						var bar = $('.repo').first().clone();
 						bar.css('display', 'block');
@@ -78,7 +82,9 @@
 						option.innerHTML = recipe.description;
 						document.getElementById('receipe-sel').appendChild(option);
 						*/
+					/*
 					});
+					*/
 				}
 			});
 		});

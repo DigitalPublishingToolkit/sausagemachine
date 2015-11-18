@@ -7,22 +7,40 @@ require_once('makefile.inc.php');
 /**
  *	Return the edit view
  */
-function route_get_edit() {
+function route_get_edit($param = array()) {
 	return render_php('view-edit.php');
 }
 
 /**
  *	Return the import view
  */
-function route_get_import() {
+function route_get_import($param = array()) {
 	return render_php('view-import.php');
 }
 
 /**
- *	Return the projects view
+ *	Return projects registered with the system, either as HTML page or JSON array
  */
-function route_get_projects() {
-	return render_php('view-projects.php');
+function route_get_projects($param = array()) {
+	if (strpos($_SERVER['HTTP_ACCEPT'], 'text/html') !== false) {
+		return render_php('view-projects.php');
+	} else {
+		$s = @file_get_contents(rtrim(config('content_dir', 'content'), '/') . 'projects.json');
+		if ($s === false) {
+			return array();
+		}
+		$json = @json_decode($s);
+		if ($json === false) {
+			return array();
+		} else {
+			return $json;
+		}
+	}
+}
+
+// XXX: route_projects_post?
+function route_post_projects($param = array()) {
+
 }
 
 /**
