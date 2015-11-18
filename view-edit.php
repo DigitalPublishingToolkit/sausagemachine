@@ -118,16 +118,19 @@
 
 			var convert = document.getElementById('btn-convert');
 			convert.addEventListener('click', function(e) {
-				var recipe = document.getElementById('repo-sel').value;
+				var repo = document.getElementById('repo-sel').value;
 				var target = document.getElementById('target-sel').value;
 				$.ajax('json.php?convert', {
 					method: 'POST',
 					data: {
-						'url': recipe,
+						'repo': repo,
 						'target': target,
-						'markdown': document.getElementById('markdown').value
+						'files': {
+							'md/seed.md': document.getElementById('markdown').value
+						}
 					},
 					success: function(data) {
+						/*
 						var blob = b64toBlob(data.data, data.mime);
 						console.log(blob);
 						var blobUrl = URL.createObjectURL(blob);
@@ -139,6 +142,7 @@
 						a.text('download');
 
 						$('.result').html(a);
+						*/
 						// XXX: binary data?
 						/*
 						var mime = xhr.getResponseHeader('content-type');
