@@ -261,8 +261,25 @@ function inject_uploaded_file($tmp_key, $fn, $mime = NULL, $orig_fn = '') {
 
 
 function inject_file($tmp_key, $fn, $content) {
-	// XXX: implement
-	return false;
+	$old_umask = @umask(0000);
+
+	// check for possible attempts to get out of the sausage machine
+	$pos = strpos('../', $fn);
+	if ($pos !== false) {
+		return false;
+	}
+
+	// make sure the containing directory exists
+	$pos = strrpos('/', $fn);
+	if ($pos !== false) {
+		@mkdir(tmp_dir($tmp_key) . '/' . substr($fn, 0, $pos), 0777, true);
+	}
+
+	$ret = @file_put_contents(tmp_dir($tmp_key) . '/' . $fn, $content);
+
+	@umask($old_umask);
+
+	return $ret;
 }
 
 
