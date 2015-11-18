@@ -16,20 +16,8 @@ function router($query_string, $method = 'GET') {
 	$route = $tmp[0];
 
 	// setup array of all other arguments
-	$args = array();
-	for ($i=1; $i < count($tmp); $i++) {
-		// look for key=val
-		$arg = explode('=', $tmp[$i]);
-		if (1 < count($arg)) {
-			$args[$arg[0]] = implode('=', array_slice($arg, 1));
-		} else {
-			$args[$arg[0]] = '';
-		}
-	}
-
-	// add post arguments as well if set
-	if (is_array($_POST)) {
-		foreach ($_POST as $key => $val) {
+	if (@is_array($_REQUEST)) {
+		foreach ($_REQUEST as $key => $val) {
 			$args[$key] = $val;
 		}
 	}
