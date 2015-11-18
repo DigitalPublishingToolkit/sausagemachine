@@ -130,7 +130,7 @@
 				$.ajax('json.php?convert', {
 					method: 'POST',
 					data: {
-						'tmp_id': sessionStorage.getItem('tmp_id'),
+						'tmp_key': sessionStorage.getItem('tmp_key'),
 						'repo': repo,
 						'target': target,
 						'files': {
@@ -138,9 +138,19 @@
 						}
 					},
 					success: function(data) {
-						sessionStorage.setItem('tmp_id', data.tmp_key);
+						sessionStorage.setItem('tmp_key', data.tmp_key);
 						window.location.hash = '#' + data.tmp_key;
 
+						$.ajax('json.php?files', {
+							method: 'GET',
+							data: {
+								'tmp_key': sessionStorage.getItem('tmp_key'),
+								'files': data.generated
+							},
+							success: function(data) {
+								console.log(data);
+							}
+						});
 						/*
 						var blob = b64toBlob(data.data, data.mime);
 						console.log(blob);
