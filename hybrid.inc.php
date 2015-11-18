@@ -11,6 +11,29 @@ function route_get_edit($param = array()) {
 	return render_php('view-edit.php');
 }
 
+function route_get_files($param = array()) {
+	if (empty($param['tmp_key'])) {
+		router_internal_server_error('Required parameter tmp_key missing');
+	}
+	if (!@is_array($param['files'])) {
+		router_internal_server_error('Required parameter files missing or invalid');
+	}
+
+	$ret = array();
+	foreach ($param['files'] as $fn) {
+		// XXX: why
+		if (strpos($fn, '../')) {
+			continue;
+		}
+		$bin = @file_get_contents(tmp_dir($param['tmp_key']) . '/' . $fn);
+		if ($bin === false) {
+			continue;
+		}
+		$ret[$fn] = array('data' => @base64_encode($bin), 'mime' => get_mime($fn));
+	}
+	return $ret;
+}
+
 /**
  *	Return the import view
  */
