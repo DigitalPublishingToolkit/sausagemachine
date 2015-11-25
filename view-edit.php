@@ -226,7 +226,8 @@
 						},
 						dataType: 'json',
 						success: function(data, textStatus, xhr) {
-							console.log(data);
+							sessionStorage.clear();
+							window.location = 'index.php?projects';
 						}
 					});
 				});
