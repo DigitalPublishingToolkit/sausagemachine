@@ -109,6 +109,11 @@ function route_post_github_repo($param = array()) {
 function route_post_github_push($param = array()) {
 	$payload = json_decode($param['payload'], true);
 
+	// prevent error on "ping" notifications
+	if (!isset($payload['head_commit']['message'])) {
+		return true;
+	}
+
 	// prevent recursions
 	if ($payload['head_commit']['message'] === 'Regenerate output files') {
 		return true;
