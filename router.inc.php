@@ -10,12 +10,18 @@
  *	@return return value from function being invoked
  */
 function router($query_string, $method = 'GET') {
-	$tmp = explode('&', $query_string);
-
-	// get desired route (first in query string)
-	$route = $tmp[0];
+	// check if there is an explicit route argument
+	// this is needed e.g. for GitHub callbacks, which prepend the URL with their own arguments
+	if (!empty($_REQUEST['route'])) {
+		$route = $_REQUEST['route'];
+	} else {
+		// take the first argument in the query string
+		$tmp = explode('&', $query_string);
+		$route = $tmp[0];
+	}
 
 	// setup array of all other arguments
+	$args = array();
 	if (@is_array($_REQUEST)) {
 		foreach ($_REQUEST as $key => $val) {
 			$args[$key] = $val;
