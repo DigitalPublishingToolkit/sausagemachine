@@ -1,6 +1,7 @@
 <?php
 
 @require_once('config.inc.php');
+require_once('github.inc.php');
 require_once('hybrid.inc.php');
 require_once('router.inc.php');
 
