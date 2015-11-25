@@ -63,13 +63,14 @@ function check_tmp_dir_age() {
  *	release_repo() after it is no longer needed.
  *	@param $url Git (clone) URL
  *	@param $branch branch to check out (default is "master")
+  *	@param $force_update force a fetch
  *	@return tmp key, or false if unsuccessful
  */
-function get_repo($url, $branch = 'master') {
+function get_repo($url, $branch = 'master', $force_update = false) {
 	$tmp_key = tmp_key();
 
 	// get a cached copy, currently on the master branch
-	$cache_key = get_repo_for_reading($url);
+	$cache_key = get_repo_for_reading($url, $force_update);
 	if ($cache_key === false) {
 		return false;
 	}
@@ -110,9 +111,10 @@ function get_repo($url, $branch = 'master') {
  *	This will always return the default (master) branch. Don't call release_repo()
  *	together with this function.
  *	@param $url Git (clone) URL
+ *	@param $force_update force a fetch
  *	@return cache key, or false if unsuccessful
  */
-function get_repo_for_reading($url) {
+function get_repo_for_reading($url, $force_update = false) {
 	$cache_key = git_url_to_cache_key($url);
 	if ($cache_key === false) {
 		return false;
@@ -125,7 +127,7 @@ function get_repo_for_reading($url) {
 
 	// serve from cache, if possible, or clone from remote
 	if (is_dir(cache_dir($cache_key))) {
-		if (false === repo_check_for_update($cache_key)) {
+		if (false === repo_check_for_update($cache_key, $force_update)) {
 			return false;
 		}
 	} else {
