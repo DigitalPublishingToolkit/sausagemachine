@@ -181,16 +181,19 @@
 				});
 			});
 
-			// helper function
+			// helper function, move
 			var getCookieValue = function(name) {
 				var ret = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
 				return ret ? ret.pop() : null;
 			}
 
-			var project = document.getElementById('btn-project');
+			// set sessionStorage according to cookie, if set
 			var github_access_token = getCookieValue('github_access_token');
-			sessionStorage.setItem('github_access_token', github_access_token);
+			if (github_access_token) {
+				sessionStorage.setItem('github_access_token', github_access_token);
+			}
 
+			var project = document.getElementById('btn-project');
 			if (!github_access_token) {
 				project.innerHTML = 'Log into GitHub';
 				project.addEventListener('click', function(e) {
