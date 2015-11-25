@@ -144,9 +144,9 @@ function route_post_github_push($param = array()) {
 		router_internal_server_error('Error committing ' . $tmp_key);
 	}
 
-	$ret = repo_push($tmp_key, 'ssh://git@github.com/' . $github_repo . '.git');
+	$ret = repo_push($tmp_key, $payload['repository']['ssh_url']);
 	if ($ret === false) {
-		router_internal_server_error('Error pushing to ' . $github_repo);
+		router_internal_server_error('Error pushing to ' . $payload['repository']['ssh_url']);
 	}
 
 	return true;
