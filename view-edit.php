@@ -149,6 +149,8 @@
 							},
 							success: function(data) {
 								console.log(data);
+								var project = document.getElementById('btn-project');
+								project.style.visibility = 'visible';
 							}
 						});
 						/*
@@ -194,6 +196,9 @@
 			}
 
 			var project = document.getElementById('btn-project');
+			if (!sessionStorage.getItem('tmp_key')) {
+				project.style.visibility = 'hidden';
+			}
 			if (!github_access_token) {
 				project.innerHTML = 'Log into GitHub';
 				project.addEventListener('click', function(e) {
