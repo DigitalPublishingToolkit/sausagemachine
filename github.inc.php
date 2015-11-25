@@ -126,7 +126,14 @@ function route_post_github_push($param = array()) {
 		router_internal_server_error('Error getting branch ' . $branch . ' of ' . $payload['repository']['clone_url']);
 	}
 
-	make_run(tmp_dir($tmp_key));
+	// XXX: implement make all in template
+	// XXX: make html removes book.epub
+	make_run(tmp_dir($tmp_key), 'html', $tmp);
+	$out = $tmp;
+	make_run(tmp_dir($tmp_key), 'book.epub', $tmp);
+	$out .= "\n\n" . $tmp;
+	make_run(tmp_dir($tmp_key), 'icmls', $tmp);
+	$out .= "\n\n" . $tmp;
 
 	$modified = repo_get_modified_files($tmp_key);
 	if (empty($modified)) {
