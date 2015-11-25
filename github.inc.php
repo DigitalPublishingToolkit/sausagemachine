@@ -1,6 +1,7 @@
 <?php
 
 @require_once('config.inc.php');
+require_once('git.inc.php');
 require_once('vendor/OAuth2/Client.php');
 require_once('vendor/OAuth2/GrantType/IGrantType.php');
 require_once('vendor/OAuth2/GrantType/AuthorizationCode.php');
@@ -66,6 +67,9 @@ function route_post_github_repo($param = array()) {
 	if (empty($param['github_repo_name'])) {
 		router_bad_request('Required parameter github_repo_name missing or empty');
 	}
+	if (empty($param['tmp_key'])) {
+		router_bad_request('Required parameter tmp_key missing or empty');
+	}
 
 	$github_repo = github_create_repo($param['github_access_token'], $param['github_repo_name']);
 	if ($github_repo === false) {
@@ -82,7 +86,21 @@ function route_post_github_repo($param = array()) {
 		router_internal_server_error('Error adding webhook to ' . $github_repo);
 	}
 
-	// XXX: PUSH
+	$modified = repo_get_modified_files($param['tmp_key']);
+	$ret = repo_stage_files($param['tmp_key'], $modified);
+	if ($ret === false) {
+		router_internal_server_error('Error staging files ' . implode(', ', $modified) . ' to ' . $param['tmp_key']);
+	}
+
+	$ret = repo_commit($param['tmp_key'], 'Initial commit');
+	if ($ret === false) {
+		router_internal_server_error('Error committing ' . $param['tmp_key']);
+	}
+
+	$ret = repo_push($param['tmp_key'], 'ssh://git@github.com/' . $github_repo . '.git');
+	if ($ret === false) {
+		router_internal_server_error('Error pushing to ' . $github_repo);
+	}
 
 	return $github_repo;
 }

@@ -38,7 +38,7 @@
 		</div>
 		<div class="form-actions">
 			<button type="button" id="btn-convert" class="btn btn-primary">Convert</button>
-			<button type="button" id="btn-project" class="btn">Create project</button>
+			<button type="button" id="btn-project" class="btn">Log into GitHub</button>
 		</div>
 	</div>
 	<script src="js/jquery-2.1.4.min.js"></script>
@@ -181,27 +181,54 @@
 				});
 			});
 
+			// helper function
+			var getCookieValue = function(name) {
+				var ret = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+				return ret ? ret.pop() : null;
+			}
+
 			var project = document.getElementById('btn-project');
-			project.addEventListener('click', function(e) {
-				var recipe = document.getElementById('repo-sel').value;
-				var target = document.getElementById('target-sel').value;
-				var repo = prompt('Name the repository');
-				$.ajax('json.php?create_project', {
-					method: 'POST',
-					data: {
-						'recipe': recipe,
-						'target': target,
-						'repo': repo,
-						'markdown': document.getElementById('markdown').value
-					},
-					dataType: 'json',
-					success: function(data, textStatus, xhr) {
-						if (data.url) {
-							window.location = data.url;
+			var github_access_token = getCookieValue('github_access_token');
+			sessionStorage.setItem('github_access_token', github_access_token);
+
+			if (!github_access_token) {
+				project.innerHTML = 'Log into GitHub';
+				project.addEventListener('click', function(e) {
+					$.ajax('json.php?github_auth', {
+						method: 'GET',
+						data: {
+							'target': window.location.href
+						},
+						dataType: 'json',
+						success: function(data, textStatus, xhr) {
+							window.location = data;
 						}
-					}
+					});
 				});
-			});
+			} else {
+				project.innerHTML = 'Create project on GitHub';
+
+				project.addEventListener('click', function(e) {
+					var github_repo_name = prompt("Name of the repository");
+					if (!github_repo_name) {
+						return;
+					}
+
+					$.ajax('json.php?github_repo', {
+						method: 'POST',
+						data: {
+							'tmp_key': sessionStorage.getItem('tmp_key'),
+							'github_access_token': sessionStorage.getItem('github_access_token'),
+							'github_repo_name': github_repo_name
+						},
+						dataType: 'json',
+						success: function(data, textStatus, xhr) {
+							console.log(data);
+						}
+					});
+				});
+			}
+
 		});
 	</script>
 </body>
