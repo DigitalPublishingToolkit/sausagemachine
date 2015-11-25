@@ -193,7 +193,7 @@ function repo_add_to_cache($url) {
 		return false;
 	}
 
-	@chdir(cache_key($cache_key));
+	@chdir(cache_dir($cache_key));
 	// all repos in cache are on the master branch
 	@exec('git clone -b master ' . escapeshellarg($url) . ' . 2>&1', $out, $ret_val);
 
