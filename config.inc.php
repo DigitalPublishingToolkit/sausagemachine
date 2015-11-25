@@ -20,6 +20,10 @@ $config['default_repo'] = 'https://github.com/DigitalPublishingToolkit/template-
 $config['default_target'] = 'html';
 // default view to display
 $config['default_route'] = 'import';
+// Github application "Client ID" (to generate: https://github.com/settings/applications/new)
+$config['github_client_id'] = 'CHANGEME';
+// Github application "Client Secret" matching the "Client ID above"
+$config['github_client_secret'] = 'CHANGEME';
 // blacklist of Makefile targets to hide from being displayed
 $config['ignore_targets'] = array(
 		'book.md',
@@ -45,7 +49,7 @@ $config['target_descriptions'] = array(
 	);
 
 // Overwrites
-@include('user_config.inc.php');
+@include('user-config.inc.php');
 
 
 /**
