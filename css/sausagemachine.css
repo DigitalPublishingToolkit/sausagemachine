@@ -12,7 +12,7 @@
 }
 
 .form-actions {
-	margin-top: 30px;
+	margin-top: 28px;
 }
 
 textarea {
@@ -64,5 +64,32 @@ li .counter {
 }
 
 .result {
+	height: 313px;
 	margin-bottom: 20px;
+	overflow-y: scroll;
+}
+
+.result-html {
+	text-align: left;
+}
+
+.result-html ul {
+	list-style-type: disc;
+	list-style-position: inside;
+}
+
+.result-html ol {
+	list-style-position: inside;
+}
+
+.result-html li {
+	padding: 0;
+}
+
+select:not([multiple]) {
+	height: 30px;
+}
+
+.options-line {
+	margin: 5px 0;
 }

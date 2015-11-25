@@ -20,17 +20,17 @@
 		</div>
 		<div class="columns">
 			<div class="one-half column">
-				<textarea id="markdown" placeholder="Enter Markdown here"></textarea>
+				<textarea id="markdown" placeholder="Enter text here"></textarea>
 			</div>
 			<div class="one-half column">
 				<div class="result blankslate">
-					Rendered Markdown
+					Write <a href="https://daringfireball.net/projects/markdown/syntax" target="_blank">Markdown</a> on your left
 				</div>
-				<div>
+				<div class="options-line">
 					<label><span class="tooltipped tooltipped-n" aria-label="Select one of our repositories to base your work on">Template</span></label>
 					<select id="repo-sel"></select>
 				</div>
-				<div>
+				<div class="options-line">
 					<label><span class="tooltipped tooltipped-n" aria-label="Which format do you want to convert the text to">Output</span></label>
 					<select id="target-sel"></select>
 				</div>
@@ -127,6 +127,8 @@
 			convert.addEventListener('click', function(e) {
 				var repo = document.getElementById('repo-sel').value;
 				var target = document.getElementById('target-sel').value;
+				$('.result').html('Converting...');
+				$('.result').removeClass('result-html');
 				$.ajax('json.php?convert', {
 					method: 'POST',
 					data: {
@@ -140,6 +142,8 @@
 					success: function(data) {
 						sessionStorage.setItem('tmp_key', data.tmp_key);
 						window.location.hash = '#' + data.tmp_key;
+						var project = document.getElementById('btn-project');
+						project.style.visibility = 'visible';
 
 						$.ajax('json.php?files', {
 							method: 'GET',
@@ -148,9 +152,18 @@
 								'files': data.generated
 							},
 							success: function(data) {
-								console.log(data);
-								var project = document.getElementById('btn-project');
-								project.style.visibility = 'visible';
+								for (var fn in data) {
+									var blob = b64toBlob(data[fn].data, data[fn].mime);
+									var blobUrl = URL.createObjectURL(blob);
+									if (data[fn].mime == 'text/html') {
+										var html = window.atob(data[fn].data);
+										$('.result').html(html);
+										$('.result').addClass('result-html');
+									} else {
+										$('.result').html('<a href="' + blobUrl + '" download="' + fn + '"><button type="button" class="btn btn-primary">' + fn + '</button></a>');
+									}
+									break;
+								}
 							}
 						});
 						/*

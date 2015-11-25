@@ -19,9 +19,9 @@
 			</nav>
 		</div>
 		<div class="columns">
-	    	<div class="one-third column">
-	    		&nbsp;
-    		</div>
+			<div class="one-third column">
+				<iframe src="https://www.youtube.com/embed/oyXHA7xiChc?start=20" frameborder="0" style="width: 100%;"></iframe>
+			</div>
 			<div class="two-thirds column">
 				<div class="flash" style="margin-bottom: 2em; display: none;">
 					Your book project got created as <a href="" id="foo"></a> on Github. We will automagically update various output formats for you whenever you push to this repository.<br><br>
