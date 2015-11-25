@@ -184,7 +184,6 @@ function route_post_convert($param = array()) {
 
 	// clean repository
 	make_run(tmp_dir($tmp_key), 'clean');
-	$after_cleaning = repo_get_modified_files($tmp_key);
 
 	// add updated files
 	$files = @is_array($param['files']) ? $param['files'] : array();
@@ -195,6 +194,8 @@ function route_post_convert($param = array()) {
 
 	// make target
 	$target = !empty($param['target']) ? $param['target'] : config('default_target');
+	// timestamp for determining modified files, see below
+	$then = time();
 	$ret = make_run(tmp_dir($tmp_key), $target, $out);
 	if ($ret !== 0) {
 		// return the error in JSON instead as a HTTP status code
@@ -207,12 +208,14 @@ function route_post_convert($param = array()) {
 	$modified = repo_get_modified_files($tmp_key);
 	$generated = array();
 	foreach ($modified as $fn) {
-		if (in_array($fn, $after_cleaning)) {
-			// file existed earlier
-			continue;
-		}
 		if (in_array($fn, array_keys($files))) {
 			// we uploaded this ourselves
+			continue;
+		}
+		// check file modification time
+		$mtime = @filemtime(tmp_dir($tmp_key) . '/' . $fn);
+		if ($mtime < $then) {
+			// file existed before
 			continue;
 		}
 		$generated[] = $fn;
