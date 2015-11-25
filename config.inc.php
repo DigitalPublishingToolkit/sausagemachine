@@ -20,10 +20,14 @@ $config['default_repo'] = 'https://github.com/DigitalPublishingToolkit/template-
 $config['default_target'] = 'html';
 // default view to display
 $config['default_route'] = 'import';
-// Github application "Client ID" (to generate: https://github.com/settings/applications/new)
+// GitHub application "Client ID (to generate: https://github.com/settings/applications/new)
 $config['github_client_id'] = 'CHANGEME';
-// Github application "Client Secret" matching the "Client ID above"
+// GitHub application "Client Secret" matching the "Client ID above"
 $config['github_client_secret'] = 'CHANGEME';
+// GitHub username used for committing to user repositories
+$config['github_push_as'] = 'CHANGEME';
+// GitHub username associated with the application
+$config['github_useragent'] = 'CHANGEME';
 // blacklist of Makefile targets to hide from being displayed
 $config['ignore_targets'] = array(
 		'book.md',
