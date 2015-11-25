@@ -218,6 +218,10 @@ function route_post_convert($param = array()) {
 			// file existed before
 			continue;
 		}
+		// XXX: fix template instead
+		if (in_array($fn, array('md/book.md'))) {
+			continue;
+		}
 		$generated[] = $fn;
 	}
 
