@@ -17,6 +17,7 @@ function router($query_string, $method = 'GET') {
 	} else {
 		// take the first argument in the query string
 		$tmp = explode('&', $query_string);
+		$tmp[0] = rtrim($tmp[0], '=');
 		$route = $tmp[0];
 	}
 
