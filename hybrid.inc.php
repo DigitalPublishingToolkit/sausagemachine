@@ -296,7 +296,7 @@ function inject_uploaded_file($tmp_key, $fn, $mime = NULL, $orig_fn = '') {
 	$old_umask = @umask(0000);
 
 	// make sure the containing directory exists
-	$pos = strrpos('/', $target);
+	$pos = strrpos($target, '/');
 	if ($pos !== false) {
 		@mkdir(tmp_dir($tmp_key) . '/' . substr($target, 0, $pos), 0777, true);
 	}
