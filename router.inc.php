@@ -48,6 +48,7 @@ function router($query_string, $method = 'GET') {
  */
 function router_bad_request($reason = '') {
 	@header($_SERVER['SERVER_PROTOCOL'] . ' 400 Bad Request', true, 400);
+	echo $reason;
 	die();
 }
 
@@ -59,5 +60,6 @@ function router_bad_request($reason = '') {
  */
 function router_internal_server_error($reason = '') {
 	@header($_SERVER['SERVER_PROTOCOL'] . ' 500 Internal Server Error', true, 500);
+	echo $reason;
 	die();
 }
