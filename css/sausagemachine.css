@@ -94,3 +94,8 @@ select:not([multiple]) {
 .options-line {
 	margin: 5px 0;
 }
+
+.upload-hovering {
+	cursor: copy;
+	background-color: #999;
+}

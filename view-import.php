@@ -32,12 +32,16 @@
 			var upload = document.getElementById('upload');
 
 			upload.addEventListener('dragenter', function(e) {
+				$(this).addClass('upload-hovering');
 				e.stopPropagation();
 				e.preventDefault();
 			}, false);
 			upload.addEventListener('dragover', function(e) {
 				e.stopPropagation();
 				e.preventDefault();
+			}, false);
+			upload.addEventListener('dragleave', function(e) {
+				$(this).removeClass('upload-hovering');
 			}, false);
 			upload.addEventListener('drop', function(e) {
 				e.stopPropagation();
