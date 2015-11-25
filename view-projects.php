@@ -19,7 +19,8 @@
 			</nav>
 		</div>
 		<div class="columns">
-			<div class="one-third column">
+			<div class="one-third column" style="position: relative;">
+				<div style="width: 100%; height: 100%; background-color: white; position: absolute; z-index: 1;" onmouseover="this.style.visibility='hidden'; var that = this; setTimeout(function() { that.style.visibility='visible'; }, 1000);"></div>
 				<iframe src="https://www.youtube.com/embed/oyXHA7xiChc?start=20" frameborder="0" style="width: 100%;"></iframe>
 			</div>
 			<div class="two-thirds column">
