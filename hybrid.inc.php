@@ -29,7 +29,7 @@ function route_get_files($param = array()) {
 		if ($bin === false) {
 			continue;
 		}
-		$ret[$fn] = array('data' => @base64_encode($bin), 'mime' => get_mime($fn));
+		$ret[$fn] = array('data' => @base64_encode($bin), 'mime' => get_mime(tmp_dir($param['tmp_key']) . '/' . $fn));
 	}
 	return $ret;
 }
