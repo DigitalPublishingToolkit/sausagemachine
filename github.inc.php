@@ -2,6 +2,7 @@
 
 @require_once('config.inc.php');
 require_once('git.inc.php');
+require_once('makefile.inc.php');
 require_once('vendor/OAuth2/Client.php');
 require_once('vendor/OAuth2/GrantType/IGrantType.php');
 require_once('vendor/OAuth2/GrantType/AuthorizationCode.php');
@@ -105,6 +106,47 @@ function route_post_github_repo($param = array()) {
 	return $github_repo;
 }
 
+function route_post_github_push($param = array()) {
+	$payload = json_decode($param['payload'], true);
+
+	// prevent recursions
+	if ($payload['head_commit']['message'] === 'Regenerate output files') {
+		return true;
+	}
+
+	// ref is like "refs/heads/master"
+	$branch = @array_pop(explode('/', $payload['ref']));
+	$tmp_key = get_repo($payload['repository']['clone_url'], $branch, true);
+	if ($tmp_key === false) {
+		router_internal_server_error('Error getting branch ' . $branch . ' of ' . $payload['repository']['clone_url']);
+	}
+
+	make_run(tmp_dir($tmp_key));
+
+	$modified = repo_get_modified_files($tmp_key);
+	if (empty($modified)) {
+		// nothing to commit
+		return true;
+	}
+
+	$ret = repo_stage_files($tmp_key, $modified);
+	if ($ret === false) {
+		router_internal_server_error('Error staging files ' . implode(', ', $modified) . ' to ' . $tmp_key);
+	}
+
+	$ret = repo_commit($tmp_key, 'Regenerate output files');
+	if ($ret === false) {
+		router_internal_server_error('Error committing ' . $tmp_key);
+	}
+
+	$ret = repo_push($tmp_key, 'ssh://git@github.com/' . $github_repo . '.git');
+	if ($ret === false) {
+		router_internal_server_error('Error pushing to ' . $github_repo);
+	}
+
+	return true;
+}
+
 /**
  *	Create a repository on GitHub
  *	@param String $github_access_token see route_get_github_auth & route_get_github_auth_callback
@@ -166,7 +208,7 @@ function github_add_webhook($github_access_token, $github_repo) {
 		),
 		'config' => array(
 			// XXX: change
-			'url' => base_url(),
+			'url' => base_url() . '?github_push',
 			'content_type' => 'form'
 		)
 	);
