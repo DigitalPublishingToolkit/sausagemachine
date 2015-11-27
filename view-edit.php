@@ -133,19 +133,25 @@
 				var target = document.getElementById('target-sel').value;
 				$('.result').html('Converting...');
 				$('.result').removeClass('result-html');
+				// XXX: fix book.md & tmp.md logic in Makefile
+				var files = {};
+				var markdown_fn = 'md/seed.md';
+				if (sessionStorage.getItem('markdown_fn')) {
+					markdown_fn = sessionStorage.getItem('markdown_fn');
+				}
+				files[markdown_fn] = document.getElementById('markdown').value;
 				$.ajax('json.php?convert', {
 					method: 'POST',
 					data: {
 						'tmp_key': sessionStorage.getItem('tmp_key'),
 						'repo': repo,
 						'target': target,
-						'files': {
-							'md/seed.md': document.getElementById('markdown').value
-						}
+						'files': files
 					},
 					success: function(data) {
 						sessionStorage.setItem('tmp_key', data.tmp_key);
 						window.location.hash = '#' + data.tmp_key;
+						sessionStorage.setItem('markdown', document.getElementById('markdown').value);
 						var project = document.getElementById('btn-project');
 						project.style.visibility = 'visible';
 
