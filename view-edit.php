@@ -160,7 +160,7 @@
 									var blob = b64toBlob(data[fn].data, data[fn].mime);
 									var blobUrl = URL.createObjectURL(blob);
 									if (data[fn].mime == 'text/html') {
-										var html = window.atob(data[fn].data);
+										var html = decodeURIComponent(escape(window.atob(data[fn].data)));
 										$('.result').html(html);
 										$('.result').addClass('result-html');
 									} else {

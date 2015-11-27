@@ -93,7 +93,7 @@
 										for (var first in data) break;
 										if (first) {
 											// save markdown in session storage
-											sessionStorage.setItem('markdown', window.atob(data[first].data));
+											sessionStorage.setItem('markdown', decodeURIComponent(escape(window.atob(data[first].data))));
 										}
 										// redirect
 										window.location = 'index.php?edit#' + sessionStorage.tmp_key;
