@@ -63,6 +63,7 @@
 							'target': 'html'
 						},
 						success: function(data) {
+							// XXX: do this in edit instead
 							var toFetch;
 							// look for generated Markdown files first
 							for (var i=0; i < data.generated.length; i++) {
