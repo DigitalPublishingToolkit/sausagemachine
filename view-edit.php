@@ -249,6 +249,7 @@
 						dataType: 'json',
 						success: function(data, textStatus, xhr) {
 							sessionStorage.clear();
+							sessionStorage.setItem('github_repo', data);
 							window.location = 'index.php?projects';
 						}
 					});

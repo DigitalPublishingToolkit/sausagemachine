@@ -25,8 +25,8 @@
 			</div>
 			<div class="two-thirds column">
 				<div class="flash" style="margin-bottom: 2em; display: none;">
-					Your book project got created as <a href="" id="foo"></a> on Github. We will automagically update various output formats for you whenever you push to this repository.<br><br>
-					<a id="bar" href="">Click here</a> to clone the repository to your own computer. We recommend the application <a href="http://macdown.uranusjr.com/">MacDown</a> for editing the Markdown files.
+					Your book project got created as <a href="" id="github-repo" target="_blank"></a> on Github. We will automagically update various output formats for you whenever you push to this repository.<br><br>
+					<a id="github-repo-clone" href="">Click here</a> to clone the repository to your own computer. We recommend the application <a href="http://macdown.uranusjr.com/" target="_blank">MacDown</a> for editing the Markdown files.
 				</div>
 				<div class="boxed-group">
 					<h3>Repositories</h3>
@@ -51,14 +51,13 @@
 		}
 
 		$(document).ready(function() {
-			/*
-			if (getCookie('repo').length) {
+			if (sessionStorage.getItem('github_repo')) {
 				$('.flash').css('display', 'block');
-				$('#foo').attr('href', 'http://github.com/' + unescape(getCookie('repo')));
-				$('#foo').text(unescape(getCookie('repo')));
-				$('#bar').attr('href', 'github-mac://openRepo/https://github.com/' + unescape(getCookie('repo')));
+				$('#github-repo').attr('href', 'http://github.com/' + sessionStorage.getItem('github_repo'));
+				$('#github-repo').text(sessionStorage.getItem('github_repo'));
+				$('#github-repo-clone').attr('href', 'github-mac://openRepo/https://github.com/' + sessionStorage.getItem('github_repo'));
+				sessionStorage.removeItem('github_repo');
 			}
-			*/
 
 			$.ajax('json.php?projects', {
 				method: 'GET',
