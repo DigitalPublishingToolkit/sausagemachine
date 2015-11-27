@@ -97,5 +97,5 @@ select:not([multiple]) {
 
 .upload-hovering {
 	cursor: copy;
-	background-color: #999;
+	opacity: 0.5;
 }
