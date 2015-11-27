@@ -103,6 +103,18 @@ function route_post_github_repo($param = array()) {
 		router_internal_server_error('Error pushing to ' . $github_repo);
 	}
 
+	// add to projects.json
+	// XXX: turn into a function, make atomic
+	$s = @file_get_contents(rtrim(config('content_dir', 'content'), '/') . '/projects.json');
+	$projects = @json_decode($s, true);
+	if (!@is_array($projects)) {
+		$projects = array();
+	}
+	$projects[] = array('created' => time(), 'updated' => time(), 'github_repo' => $github_repo, 'parent' => repo_get_url($param['tmp_key']));
+	$old_umask = @umask(0000);
+	@file_put_contents(rtrim(config('content_dir', 'content'), '/') . '/projects.json', json_encode($projects));
+	@umask($old_umask);
+
 	return $github_repo;
 }
 
@@ -156,7 +168,22 @@ function route_post_github_push($param = array()) {
 		router_internal_server_error('Error pushing to ' . $payload['repository']['ssh_url']);
 	}
 
-	return true;
+	// XXX: move
+	$s = @file_get_contents(rtrim(config('content_dir', 'content'), '/') . '/projects.json');
+	$projects = @json_decode($s, true);
+	if (!@is_array($projects)) {
+		$projects = array();
+	}
+	foreach ($projects as &$p) {
+		if ($payload['repository']['full_name'] === $p['github_repo']) {
+			$p['updated'] = time();
+		}
+	}
+	$old_umask = @umask(0000);
+	@file_put_contents(rtrim(config('content_dir', 'content'), '/') . '/projects.json', json_encode($projects));
+	@umask($old_umask);
+
+	return 'Success';
 }
 
 /**

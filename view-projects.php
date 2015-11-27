@@ -63,28 +63,26 @@
 				method: 'GET',
 				dataType: 'json',
 				success: function(data) {
-					console.log(data);
-					/*
-					_.each(data, function(repository, key) {
+
+					// sort by "updated"
+					data.sort(function(a, b){
+						if(a.updated < b.updated) return 1;
+						if(a.updated > b.updated) return -1;
+						return 0;
+					});
+
+					$.each(data, function() {
 						var bar = $('.repo').first().clone();
 						bar.css('display', 'block');
-						bar.find('.repo-name a').attr('href', 'http://github.com/' + key);
-						bar.find('.repo-name a').text(repository.name);
+						bar.find('.repo-name a').attr('href', 'http://github.com/' + this.github_repo);
+						bar.find('.repo-name a').text(this.github_repo);
 						//var diff = Math.abs(new Date() - new Date(repository.updated*1000));
 						//var d = new Date(diff);
-						var d = new Date(repository.updated*1000);
+						var d = new Date(this.updated*1000);
 						bar.find('.note').text('Last updated '+d);
-						bar.find('.counter').text(repository.owner);
+						//bar.find('.counter').text(repository.owner);
 						$('.repo').parent().append(bar);
-						console.log(repository);
-						/*
-						var option = document.createElement('option');
-						option.innerHTML = recipe.description;
-						document.getElementById('receipe-sel').appendChild(option);
-						*/
-					/*
 					});
-					*/
 				}
 			});
 		});

@@ -48,16 +48,13 @@ function route_get_projects($param = array()) {
 	if (strpos($_SERVER['HTTP_ACCEPT'], 'text/html') !== false) {
 		return render_php('view-projects.php');
 	} else {
-		$s = @file_get_contents(rtrim(config('content_dir', 'content'), '/') . 'projects.json');
-		if ($s === false) {
-			return array();
+		$s = @file_get_contents(rtrim(config('content_dir', 'content'), '/') . '/projects.json');
+		$projects = @json_decode($s, true);
+		if (!@is_array($projects)) {
+			$projects = array();
 		}
-		$json = @json_decode($s);
-		if ($json === false) {
-			return array();
-		} else {
-			return $json;
-		}
+		// XXX: sort?
+		return $projects;
 	}
 }
 
