@@ -210,7 +210,7 @@ function repo_add_to_cache($url) {
 }
 
 /**
- *	Fetch the remote repository if this hasn't been done recently
+ *	Fetch the remote repository, if this hasn't been done recently, and checkout the remote master branch
  *	@param $cache_key cache key
  *	@param $force force a fetch
  *	@return true if succesful, false if not
@@ -233,7 +233,10 @@ function repo_check_for_update($cache_key, $force = false) {
 	@touch(cache_dir($cache_key));
 
 	@chdir(cache_dir($cache_key));
-	@exec('git fetch 2>&1', $out, $ret_val);
+	@exec('git fetch --all 2>&1', $out, $ret_val);
+	if ($ret_val === 0) {
+		@exec('git reset --hard origin/master 2>&1', $out, $ret_val);
+	}
 
 	@umask($old_umask);
 	@chdir($old_cwd);
