@@ -111,12 +111,12 @@ function route_post_github_push($param = array()) {
 
 	// prevent error on "ping" notifications
 	if (!isset($payload['head_commit']['message'])) {
-		return true;
+		return 'Not a commit';
 	}
 
 	// prevent recursions
 	if ($payload['head_commit']['message'] === 'Regenerate output files') {
-		return true;
+		return 'Not acting on my own changes';
 	}
 
 	// ref is like "refs/heads/master"
@@ -138,7 +138,7 @@ function route_post_github_push($param = array()) {
 	$modified = repo_get_modified_files($tmp_key);
 	if (empty($modified)) {
 		// nothing to commit
-		return true;
+		return 'No changes';
 	}
 
 	$ret = repo_stage_files($tmp_key, $modified);
