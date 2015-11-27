@@ -63,8 +63,46 @@
 							'target': 'html'
 						},
 						success: function(data) {
-							// XXX: update sessionStorage
-							window.location = 'index.php?edit#' + sessionStorage.tmp_key;
+							var toFetch;
+							// look for generated Markdown files first
+							for (var i=0; i < data.generated.length; i++) {
+								var ext = data.generated[i].substring(data.generated[i].length-3).toLowerCase();
+								if (ext == '.md') {
+									toFetch = data.generated[i];
+									break;
+								}
+							}
+							// and for uploaded ones second
+							if (!toFetch) {
+								for (var i=0; i < data.files.length; i++) {
+									var ext = data.files[i].substring(data.files[i].length-3).toLowerCase();
+									if (ext == '.md') {
+										toFetch = data.files[i];
+										break;
+									}
+								}
+							}
+							if (toFetch) {
+								$.ajax('json.php?files', {
+									method: 'GET',
+									data: {
+										'tmp_key': sessionStorage.getItem('tmp_key'),
+										'files': [toFetch]
+									},
+									success: function(data) {
+										for (var first in data) break;
+										if (first) {
+											// save markdown in session storage
+											sessionStorage.setItem('markdown', window.atob(data[first].data));
+										}
+										// redirect
+										window.location = 'index.php?edit#' + sessionStorage.tmp_key;
+									}
+								});
+							} else {
+								// redirect instantly
+								window.location = 'index.php?edit#' + sessionStorage.tmp_key;
+							}
 						}
 					});
 				};
