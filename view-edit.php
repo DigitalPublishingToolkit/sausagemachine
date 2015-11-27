@@ -47,8 +47,12 @@
 
 			var hash = window.location.hash.substring(1);
 			if (hash != sessionStorage.getItem('tmp_key')) {
-				sessionStorage.clear();
-				sessionStorage.setItem('tmp_key', hash);
+				if (hash.length) {
+					sessionStorage.clear();
+					sessionStorage.setItem('tmp_key', hash);
+				} else {
+					window.location.hash = '#' + sessionStorage.getItem('tmp_key');
+				}
 			}
 
 			if (sessionStorage.markdown) {
