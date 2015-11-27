@@ -24,7 +24,7 @@ function route_get_github_auth($param = array()) {
 	$redirect_uri .= '&' . http_build_query($param);
 
 	$client = new OAuth2\Client(config('github_client_id'), config('github_client_secret'));
-	$auth_url = $client->getAuthenticationUrl('https://github.com/login/oauth/authorize', $redirect_uri, array('scope' => 'repo'));
+	$auth_url = $client->getAuthenticationUrl('https://github.com/login/oauth/authorize', $redirect_uri, array('scope' => 'public_repo'));
 	return $auth_url;
 }
 
