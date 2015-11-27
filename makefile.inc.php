@@ -69,6 +69,7 @@ function make_get_targets($dir) {
 function make_run($dir, $target = 'all', &$out = '') {
 	$old_cwd = getcwd();
 	@chdir($dir);
+	// XXX: support more than one target
 	@exec('make ' . escapeshellarg($target) . ' 2>&1', $out, $ret_val);
 	@chdir($old_cwd);
 	$out = implode("\n", $out);
