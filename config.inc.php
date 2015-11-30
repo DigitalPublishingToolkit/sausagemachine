@@ -44,6 +44,10 @@ $config['repos'] = array(
 		array(
 			'repo' => 'https://github.com/DigitalPublishingToolkit/template-test.git',
 			'description' => 'Default template'
+		),
+		array (
+			'repo' => 'https://github.com/template01/template01-template-test.git',
+			'description' => 'template01 template (pun intended?)'
 		)
 	);
 $config['target_descriptions'] = array(
