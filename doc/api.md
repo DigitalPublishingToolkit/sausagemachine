@@ -29,7 +29,7 @@ GET temps
 
 POST temps/create
 
-GET temps/show/:temp
+	param: repo (default: default_repo config option)
 
 	{
 		temp: "14486397022961",
@@ -40,6 +40,21 @@ GET temps/show/:temp
 			'docx/hva_deliverables_2015_q4.docx'
 		],
 		modified: [
+		]
+	}
+
+GET temps/:temp
+
+	{
+		temp: "14486397022961",
+		repo: "https://github.com/DigitalPublishingToolkit/template-test.git",
+		branch: "master",
+		files: [
+			'book.html',
+			'docx/hva_deliverables_2015_q4.docx',
+			'Makefile'
+		],
+		modified: [
 			'book.html',
 			'docx/hva_deliverables_2015_q4.docx'
 		]
@@ -47,21 +62,63 @@ GET temps/show/:temp
 
 GET temps/files/:temp/:fn
 
-	different encodings
+	param: format ("raw", "download", "json")
+
+	if "json":
+
+	{
+		fn: "book.html",
+		mime: "text/html",
+		data: "..." (base64-encoded)
+	}
 
 POST temps/files/update/:temp
 
-	[] or files
+	param: files (or HTTP upload)
+	param: auto_convert (default: no)
+
+	{
+		converted: [
+			"md/foo.md"
+		],
+		modified: [
+			"docx/foo.docx",
+			"md/foo.md"
+		]
+	}
 
 POST temps/files/delete/:temp/:fn
 
 POST temps/make/:temp
 
+	param: target (default: default_target config option)
+	param: clean_before (default: false)
+
+	{
+		target: "html",
+		modified: [
+			"book.html"
+		],
+		error: false, (or errno)
+		out: [
+			"...",
+			"..."
+		]
+	}
+
 POST temps/commit/:temp
+
+	param: files (default: all modified)
+	param: message (optional)
+	param: author (optional)
 
 POST temps/push/:temp
 
+	param: repo
+
 POST temps/switch_repo/:temp
+
+	param: repo
 
 POST temps/delete/:temp
 
@@ -79,3 +136,5 @@ GET projects
 POST projects/create
 
 POST projects/update/:repo
+
+	param: key -> value
