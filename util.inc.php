@@ -51,10 +51,14 @@ function filext($fn) {
  *	@return string if successful, false if not
  */
 function get_mime($fn) {
-	$finfo = @finfo_open(FILEINFO_MIME_TYPE);
-	$out = @finfo_file($finfo, $fn);
-	@finfo_close($finfo);
-	return $out;
+	if (function_exists('finfo_open')) {
+		$finfo = @finfo_open(FILEINFO_MIME_TYPE);
+		$out = @finfo_file($finfo, $fn);
+		@finfo_close($finfo);
+		return $out;
+	} else {
+		return mime_content_type($fn);
+	}
 }
 
 /**
