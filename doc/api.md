@@ -61,7 +61,7 @@ GET temps/:temp
 	}
 
 	... files: all files
-	... modified: all modified or newly created files
+	... modified: all modified or newly created files on top of the last commit
 
 GET temps/files/:temp/:fn
 
@@ -91,7 +91,7 @@ POST temps/files/update/:temp
 	}
 
 	... converted: files created or modified by auto_convert
-	... modified: only by this
+	... modified: modified or newly added files (by this method)
 
 POST temps/files/delete/:temp/:fn
 
@@ -112,13 +112,17 @@ POST temps/make/:temp
 		]
 	}
 
-	... modified: only by this
+	... modified:modified or newly added files (by this method)
 
 POST temps/commit/:temp
 
 	param: files (default: all modified)
 	param: message (optional)
 	param: author (optional)
+
+	{
+		hash: "123"
+	}
 
 POST temps/push/:temp
 
@@ -127,8 +131,8 @@ POST temps/push/:temp
 POST temps/switch_repo/:temp
 
 	param: repo
-	param: clean_before
-	param: clean_after
+	param: clean_before (default: false)
+	param: clean_after (default: false)
 
 POST temps/delete/:temp
 
