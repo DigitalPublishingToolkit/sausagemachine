@@ -36,12 +36,12 @@ POST temps/create
 		repo: "https://github.com/DigitalPublishingToolkit/template-test.git",
 		branch: "master",
 		files: [
-			'book.html',
-			'docx/hva_deliverables_2015_q4.docx'
-		],
-		modified: [
+			"book.html",
+			"docx/hva_deliverables_2015_q4.docx"
 		]
 	}
+
+	... files: all files
 
 GET temps/:temp
 
@@ -50,15 +50,18 @@ GET temps/:temp
 		repo: "https://github.com/DigitalPublishingToolkit/template-test.git",
 		branch: "master",
 		files: [
-			'book.html',
-			'docx/hva_deliverables_2015_q4.docx',
-			'Makefile'
+			"book.html",
+			"docx/hva_deliverables_2015_q4.docx",
+			"Makefile"
 		],
 		modified: [
-			'book.html',
-			'docx/hva_deliverables_2015_q4.docx'
+			"book.html",
+			"docx/hva_deliverables_2015_q4.docx"
 		]
 	}
+
+	... files: all files
+	... modified: all modified or newly created files
 
 GET temps/files/:temp/:fn
 
@@ -87,6 +90,9 @@ POST temps/files/update/:temp
 		]
 	}
 
+	... converted: files created or modified by auto_convert
+	... modified: only by this
+
 POST temps/files/delete/:temp/:fn
 
 POST temps/make/:temp
@@ -106,6 +112,8 @@ POST temps/make/:temp
 		]
 	}
 
+	... modified: only by this
+
 POST temps/commit/:temp
 
 	param: files (default: all modified)
@@ -119,6 +127,8 @@ POST temps/push/:temp
 POST temps/switch_repo/:temp
 
 	param: repo
+	param: clean_before
+	param: clean_after
 
 POST temps/delete/:temp
 
