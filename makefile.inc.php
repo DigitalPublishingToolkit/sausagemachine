@@ -21,6 +21,7 @@ function make_get_targets($dir) {
 
 	// Note: this currently doesn't correctly evaluate targets such as
 	// "arm7/$(TARGET).elf"
+	// XXX: make -pn
 
 	$lines = explode("\n", $s);
 	$targets = array();
