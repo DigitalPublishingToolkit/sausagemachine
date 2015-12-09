@@ -40,11 +40,6 @@ function route_get_projects($param = array()) {
 	return $projects;
 }
 
-// XXX: route_projects_post?
-function route_post_projects($param = array()) {
-
-}
-
 /**
  *	Return a list of (template) repositories
  */
@@ -101,14 +96,6 @@ function route_get_targets($param = array()) {
 
 	return $targets;
 }
-
-/**
- *	Return a list of repositories created by users
- */
-function route_get_user_repos($param = array()) {
-	// XXX
-}
-
 
 function route_post_upload_files($param = array()) {
 	if (!empty($param['tmp_key'])) {
