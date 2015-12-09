@@ -1,5 +1,44 @@
 <?php
 
+// XXX: new way
+$routes = array();
+
+function register_route($verb, $pattern, $func) {
+	global $routes;
+	$verb = strtoupper($verb);
+
+	if (!@is_array($routes[$verb])) {
+		$routes[$verb] = array();
+	}
+
+	$routes[$verb][$pattern] = $func;
+}
+
+function route($verb, $url, $param = array()) {
+	global $routes;
+	$verb = strtoupper($verb);
+
+	if (!@is_array($routes[$verb])) {
+		return false;
+	}
+
+	foreach ($_REQUEST as $key => $val) {
+		$param[$key] = $val;
+	}
+
+	foreach ($routes[$verb] as $pattern => $func) {
+		$found = @preg_match('/^' . str_replace('/', '\/', $pattern) . '$/', $url, $matches);
+		if ($found) {
+			foreach ($matches as $key => $val) {
+				$param[$key] = $val;
+			}
+			return $func($param);
+		}
+	}
+	return false;
+}
+
+
 /**
  *	Route client request
  *
@@ -49,6 +88,18 @@ function router($query_string, $method = 'GET') {
  */
 function router_bad_request($reason = '') {
 	@header($_SERVER['SERVER_PROTOCOL'] . ' 400 Bad Request', true, 400);
+	echo $reason;
+	die();
+}
+
+/**
+ *	Output a HTTP error 404
+ *
+ *	This function does not return.
+ *	@param $reason reason for eventual logging (not implemented yet)
+ */
+function router_not_found($reason = '') {
+	@header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found', true, 404);
 	echo $reason;
 	die();
 }
