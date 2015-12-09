@@ -4,13 +4,6 @@
 require_once('git.inc.php');
 require_once('makefile.inc.php');
 
-/**
- *	Return the edit view
- */
-function route_get_edit($param = array()) {
-	return render_php('view-edit.php');
-}
-
 function route_get_files($param = array()) {
 	if (empty($param['tmp_key'])) {
 		router_internal_server_error('Required parameter tmp_key missing');
@@ -35,27 +28,16 @@ function route_get_files($param = array()) {
 }
 
 /**
- *	Return the import view
- */
-function route_get_import($param = array()) {
-	return render_php('view-import.php');
-}
-
-/**
  *	Return projects registered with the system, either as HTML page or JSON array
  */
 function route_get_projects($param = array()) {
-	if (strpos($_SERVER['HTTP_ACCEPT'], 'text/html') !== false) {
-		return render_php('view-projects.php');
-	} else {
-		$s = @file_get_contents(rtrim(config('content_dir', 'content'), '/') . '/projects.json');
-		$projects = @json_decode($s, true);
-		if (!@is_array($projects)) {
-			$projects = array();
-		}
-		// XXX: sort?
-		return $projects;
+	$s = @file_get_contents(rtrim(config('content_dir', 'content'), '/') . '/projects.json');
+	$projects = @json_decode($s, true);
+	if (!@is_array($projects)) {
+		$projects = array();
 	}
+	// XXX: sort?
+	return $projects;
 }
 
 // XXX: route_projects_post?
