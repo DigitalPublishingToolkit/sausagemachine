@@ -63,44 +63,44 @@ function route_get_github_auth_callback($param = array()) {
  */
 function route_post_github_repo($param = array()) {
 	if (empty($param['github_access_token'])) {
-		router_bad_request('Required parameter github_access_token missing or empty');
+		router_error_400('Required parameter github_access_token missing or empty');
 	}
 	if (empty($param['github_repo_name'])) {
-		router_bad_request('Required parameter github_repo_name missing or empty');
+		router_error_400('Required parameter github_repo_name missing or empty');
 	}
 	if (empty($param['tmp_key'])) {
-		router_bad_request('Required parameter tmp_key missing or empty');
+		router_error_400('Required parameter tmp_key missing or empty');
 	}
 
 	$github_repo = github_create_repo($param['github_access_token'], $param['github_repo_name']);
 	if ($github_repo === false) {
-		router_internal_server_error('Error creating GitHub repository ' . $param['github_repo_name']);
+		router_error_500('Error creating GitHub repository ' . $param['github_repo_name']);
 	}
 
 	$ret = github_add_collaborator($param['github_access_token'], $github_repo, config('github_push_as'));
 	if ($ret === false) {
-		router_internal_server_error('Error adding ' . config('github_push_as') . ' as a collaborator to ' . $github_repo);
+		router_error_500('Error adding ' . config('github_push_as') . ' as a collaborator to ' . $github_repo);
 	}
 
 	$ret = github_add_webhook($param['github_access_token'], $github_repo);
 	if ($ret === false) {
-		router_internal_server_error('Error adding webhook to ' . $github_repo);
+		router_error_500('Error adding webhook to ' . $github_repo);
 	}
 
 	$modified = repo_get_modified_files($param['tmp_key']);
 	$ret = repo_stage_files($param['tmp_key'], $modified);
 	if ($ret === false) {
-		router_internal_server_error('Error staging files ' . implode(', ', $modified) . ' to ' . $param['tmp_key']);
+		router_error_500('Error staging files ' . implode(', ', $modified) . ' to ' . $param['tmp_key']);
 	}
 
 	$ret = repo_commit($param['tmp_key'], 'Initial commit');
 	if ($ret === false) {
-		router_internal_server_error('Error committing ' . $param['tmp_key']);
+		router_error_500('Error committing ' . $param['tmp_key']);
 	}
 
 	$ret = repo_push($param['tmp_key'], 'ssh://git@github.com/' . $github_repo . '.git');
 	if ($ret === false) {
-		router_internal_server_error('Error pushing to ' . $github_repo);
+		router_error_500('Error pushing to ' . $github_repo);
 	}
 
 	// add to projects.json
@@ -135,7 +135,7 @@ function route_post_github_push($param = array()) {
 	$branch = @array_pop(explode('/', $payload['ref']));
 	$tmp_key = get_repo($payload['repository']['clone_url'], $branch, true);
 	if ($tmp_key === false) {
-		router_internal_server_error('Error getting branch ' . $branch . ' of ' . $payload['repository']['clone_url']);
+		router_error_500('Error getting branch ' . $branch . ' of ' . $payload['repository']['clone_url']);
 	}
 
 	// XXX: implement make all in template
@@ -155,17 +155,17 @@ function route_post_github_push($param = array()) {
 
 	$ret = repo_stage_files($tmp_key, $modified);
 	if ($ret === false) {
-		router_internal_server_error('Error staging files ' . implode(', ', $modified) . ' to ' . $tmp_key);
+		router_error_500('Error staging files ' . implode(', ', $modified) . ' to ' . $tmp_key);
 	}
 
 	$ret = repo_commit($tmp_key, 'Regenerate output files');
 	if ($ret === false) {
-		router_internal_server_error('Error committing ' . $tmp_key);
+		router_error_500('Error committing ' . $tmp_key);
 	}
 
 	$ret = repo_push($tmp_key, $payload['repository']['ssh_url']);
 	if ($ret === false) {
-		router_internal_server_error('Error pushing to ' . $payload['repository']['ssh_url']);
+		router_error_500('Error pushing to ' . $payload['repository']['ssh_url']);
 	}
 
 	// XXX: move

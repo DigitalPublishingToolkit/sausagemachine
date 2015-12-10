@@ -6,10 +6,10 @@ require_once('makefile.inc.php');
 
 function route_get_files($param = array()) {
 	if (empty($param['tmp_key'])) {
-		router_internal_server_error('Required parameter tmp_key missing');
+		router_error_500('Required parameter tmp_key missing');
 	}
 	if (!@is_array($param['files'])) {
-		router_internal_server_error('Required parameter files missing or invalid');
+		router_error_500('Required parameter files missing or invalid');
 	}
 
 	$ret = array();
@@ -65,12 +65,12 @@ function route_get_targets($param = array()) {
 
 	$cached = get_repo_for_reading($repo);
 	if ($cached === false) {
-		router_internal_server_error('Cannot get ' . $repo);
+		router_error_500('Cannot get ' . $repo);
 	}
 
 	$targets = make_get_targets(cache_dir($cached));
 	if ($targets === false) {
-		router_internal_server_error('Error getting Makefile targets for ' . $repo);
+		router_error_500('Error getting Makefile targets for ' . $repo);
 	}
 
 	$ignore_targets = config('ignore_targets', array());
@@ -105,7 +105,7 @@ function route_post_upload_files($param = array()) {
 		$repo = !empty($param['repo']) ? $param['repo'] : config('default_repo');
 		$tmp_key = get_repo($repo);
 		if ($tmp_key === false) {
-			router_internal_server_error('Cannot get a copy of ' . $repo);
+			router_error_500('Cannot get a copy of ' . $repo);
 		}
 	}
 
@@ -136,7 +136,7 @@ function route_post_convert($param = array()) {
 		$tmp_key = $param['tmp_key'];
 		if (!empty($param['repo'])) {
 			if (false === check_repo_switch($tmp_key, $param['repo'])) {
-				router_internal_server_error('Error switching ' . $tmp_key . ' to ' . $param['repo']);
+				router_error_500('Error switching ' . $tmp_key . ' to ' . $param['repo']);
 			}
 		}
 	} else {
@@ -144,7 +144,7 @@ function route_post_convert($param = array()) {
 		$repo = !empty($param['repo']) ? $param['repo'] : config('default_repo');
 		$tmp_key = get_repo($repo);
 		if ($tmp_key === false) {
-			router_internal_server_error('Cannot get a copy of ' . $repo);
+			router_error_500('Cannot get a copy of ' . $repo);
 		}
 	}
 
@@ -321,7 +321,7 @@ function check_repo_switch($tmp_key, $repo) {
 function handle_repo_switch($tmp_key, $new_repo, &$uploaded = array()) {
 	$staging = get_repo($new_repo);
 	if ($staging === false) {
-		router_internal_server_error('Cannot get ' . $repo);
+		router_error_500('Cannot get ' . $repo);
 	}
 	// copy the files over
 	for ($i=0; $i < count($uploaded); $i++) {
@@ -334,10 +334,10 @@ function handle_repo_switch($tmp_key, $new_repo, &$uploaded = array()) {
 	}
 	// delete the original repository in tmp
 	if (false === rm_recursive(tmp_dir($tmp_key))) {
-		router_internal_server_error('Cannot delete ' . $tmp_key);
+		router_error_500('Cannot delete ' . $tmp_key);
 	}
 	// move staging to the previous location
 	if (false === @rename(tmp_dir($staging), tmp_dir($tmp_key))) {
-		router_internal_server_error('Cannot rename ' . $staging . ' to ' . $tmp_key);
+		router_error_500('Cannot rename ' . $staging . ' to ' . $tmp_key);
 	}
 }

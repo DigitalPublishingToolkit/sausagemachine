@@ -61,6 +61,34 @@ function get_mime($fn) {
 	}
 }
 
+function list_files_recursive($base_dir, $cur_dir = '') {
+	$dir = rtrim($base_dir, '/');
+	if (!empty($cur_dir)) {
+		$dir .= '/' . $cur_dir;
+	}
+
+	$fns = @scandir($dir);
+	if ($fns === false) {
+		return false;
+	}
+
+	$ret = array();
+	foreach ($fns as $fn) {
+		if (in_array($fn, array('.', '..'))) {
+			continue;
+		}
+		if (@is_dir($dir . '/' . $fn)) {
+			$childs = list_files_recursive($base_dir, $cur_dir . '/' . $fn);
+			if (is_array($childs)) {
+				$ret = array_merge($ret, $childs);
+			}
+		} else {
+			$ret[] = ltrim($cur_dir . '/' . $fn, '/');
+		}
+	}
+	return $ret;
+}
+
 /**
  *	Render a PHP view and return the output as a string
  *	@param string $fn filename

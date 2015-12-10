@@ -73,7 +73,7 @@ function router($query_string, $method = 'GET') {
 	if (function_exists($func)) {
 		$ret = $func($args);
 	} else {
-		router_bad_request('Route ' . $route . ' does not exist');
+		router_error_400('Route ' . $route . ' does not exist');
 	}
 
 	// return result
@@ -86,7 +86,7 @@ function router($query_string, $method = 'GET') {
  *	This function does not return.
  *	@param $reason reason for eventual logging (not implemented yet)
  */
-function router_bad_request($reason = '') {
+function router_error_400($reason = '') {
 	@header($_SERVER['SERVER_PROTOCOL'] . ' 400 Bad Request', true, 400);
 	echo $reason;
 	die();
@@ -98,7 +98,7 @@ function router_bad_request($reason = '') {
  *	This function does not return.
  *	@param $reason reason for eventual logging (not implemented yet)
  */
-function router_not_found($reason = '') {
+function router_error_404($reason = '') {
 	@header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found', true, 404);
 	echo $reason;
 	die();
@@ -110,7 +110,7 @@ function router_not_found($reason = '') {
  *	This function does not return.
  *	@param $reason reason for eventual logging (not implemented yet)
  */
-function router_internal_server_error($reason = '') {
+function router_error_500($reason = '') {
 	@header($_SERVER['SERVER_PROTOCOL'] . ' 500 Internal Server Error', true, 500);
 	echo $reason;
 	die();

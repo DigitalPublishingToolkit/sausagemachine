@@ -1,27 +1,84 @@
 <?php
 
+/*
+	Git manipulation and caching for Sausage Machine
+	Copyright (C) 2015  Gottfried Haider for PublishingLab
+
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 @require_once('config.inc.php');
 require_once('util.inc.php');
 
-// XXX: locking
-// XXX: invalidate cache after push?
 
 /**
  *	Return the path for a cache key
  *	@param $cache_key cache key
- *	@return string, without tailing slash
+ *	@return string, without trailing slash
  */
 function cache_dir($cache_key) {
 	return rtrim(config('content_dir', 'content'), '/') . '/cache/' . $cache_key;
 }
+
 
 /**
  *	Delete repositories in the cache that haven't been used recently
  *	@return true if successful, false if not
  */
 function check_cache_lru() {
-	// XXX: implement
+	$max_cached = config('repo_max_cached', 0);
+	if ($max_cached == 0) {
+		// check disabled
+		return true;
+	}
+
+	$fns = @scandir(cache_dir());
+	if ($fns === false) {
+		// cache_dir might not yet exist
+		return true;
+	}
+
+	$success = true;
+
+	$cached = array();
+	foreach ($fns as $fn) {
+		if (in_array($fn, array('.', '..'))) {
+			continue;
+		}
+		if (!@is_dir(cache_dir($fn))) {
+			continue;
+		}
+		$mtime = @filemtime(cache_dir($fn));
+		if ($mtime === false) {
+			$success = false;
+		}
+		$cached[$fn] = $mtime;
+	}
+	// newer repos come first
+	arsort($cached);
+
+	// delete excess cached repositories
+	for ($i=$max_cached; $i < count($cached); $i++) {
+		$cache_key = array_keys($cached)[$i];
+		if (false === rm_recursive(cache_dir($cache_key))) {
+			$success = false;
+		}
+	}
+
+	return $success;
 }
+
 
 /**
  *	Make sure the content directory contains a cache and tmp subdirectory
@@ -48,13 +105,49 @@ function check_content_dir() {
 	return true;
 }
 
+
 /**
  *	Delete leftover copies of repositories in the tmp directory
- *	@return true if there have been leftover copies, false if not
+ *	@return true if successful, false if not
  */
 function check_tmp_dir_age() {
-	// XXX: implement
+	$max_age = config('temp_max_age', 0);
+	if ($max_age == 0) {
+		// check disabled
+		return true;
+	}
+
+	$fns = @scandir(tmp_dir());
+	if ($fns === false) {
+		// cache_dir might not yet exist
+		return true;
+	}
+
+	$success = true;
+
+	foreach ($fns as $fn) {
+		if (in_array($fn, array('.', '..'))) {
+			continue;
+		}
+		if (!@is_dir(tmp_dir($fn))) {
+			continue;
+		}
+		$mtime = @filemtime(tmp_dir($fn));
+		if ($mtime === false) {
+			$success = false;
+			continue;
+		}
+		// delete old temporary repositories
+		if ($max_age < time()-$mtime) {
+			if (false === rm_recursive(tmp_dir($fn))) {
+				$success = false;
+			}
+		}
+	}
+
+	return $success;
 }
+
 
 /**
  *	Get a private copy of a remote Git repository
@@ -102,8 +195,12 @@ function get_repo($url, $branch = 'master', $force_update = false) {
 		return false;
 	}
 
+	// XXX: this could be done asynchronously
+	check_tmp_dir_age();
+
 	return $tmp_key;
 }
+
 
 /**
  *	Get a remote Git repo for reading only
@@ -136,8 +233,12 @@ function get_repo_for_reading($url, $force_update = false) {
 		}
 	}
 
+	// XXX: this could be done asynchronously
+	check_cache_lru();
+
 	return $cache_key;
 }
+
 
 /**
  *	Convert a Git URL to a key to lookup the local cache
@@ -160,6 +261,7 @@ function git_url_to_cache_key($url) {
 	return $key;
 }
 
+
 /**
  *	Release a repository after it is no longer being used
  *
@@ -170,6 +272,7 @@ function git_url_to_cache_key($url) {
 function release_repo($tmp_key) {
 	return rm_recursive(tmp_dir($tmp_key));
 }
+
 
 /**
  *	Helper function to add a remote repository to the cache
@@ -209,6 +312,7 @@ function repo_add_to_cache($url) {
 	}
 }
 
+
 /**
  *	Fetch the remote repository, if this hasn't been done recently, and checkout the remote master branch
  *	@param $cache_key cache key
@@ -244,6 +348,7 @@ function repo_check_for_update($cache_key, $force = false) {
 	return ($ret_val === 0);
 }
 
+
 /**
  *	Switch the branch of a repository
  *	@param $tmp_key tmp key
@@ -262,6 +367,7 @@ function repo_checkout_branch($tmp_key, $branch = 'master') {
 
 	return ($ret_val === 0);
 }
+
 
 /**
  *	Reset a repository to its original state
@@ -287,6 +393,7 @@ function repo_cleanup($tmp_key) {
 	}
 }
 
+
 /**
  *	Commit changes to a Git repository
  *	@param $tmp_key tmp key
@@ -306,6 +413,28 @@ function repo_commit($tmp_key, $msg, $author = 'Git User <username@example.edu>'
 	}
 }
 
+
+function repo_get_all_files($tmp_key) {
+	$fns = list_files_recursive(tmp_dir($tmp_key));
+	if ($fns === false) {
+		return false;
+	}
+	$ret = array();
+	foreach ($fns as $fn) {
+		// filter the actual git repository
+		if (strpos($fn, '.git/') !== false) {
+			continue;
+		}
+		// and .gitignore files
+		if (strpos($fn, '.gitignore') !== false) {
+			continue;
+		}
+		$ret[] = $fn;
+	}
+	return $ret;
+}
+
+
 /**
  *	Return all modified files in the working directory of a Git repository
  *	@param $tmp_key tmp key
@@ -324,7 +453,12 @@ function repo_get_modified_files($tmp_key) {
 	}
 }
 
-// XXX
+
+/**
+ *	Get remote URL of a Git repository
+ *	@param $tmp_key tmp key
+ *	@return String, or false if unsuccessful
+ */
 function repo_get_url($tmp_key) {
 	$old_cwd = getcwd();
 	@chdir(tmp_dir($tmp_key));
@@ -336,6 +470,7 @@ function repo_get_url($tmp_key) {
 		return $out[0];
 	}
 }
+
 
 /**
  *	Return whether the working directory of a Git repository has modified files
@@ -350,6 +485,7 @@ function repo_has_modified_files($tmp_key) {
 		return (0 < count($modified));
 	}
 }
+
 
 /**
  *	Push all branches of a Git repository to a remote URL
@@ -372,6 +508,7 @@ function repo_push($tmp_key, $url) {
 	}
 }
 
+
 /**
  *	Reset the index of a Git repository to some earlier state
  *	@param $tmp_key tmp key
@@ -389,6 +526,7 @@ function repo_rewind($tmp_key, $offset = 1) {
 		return true;
 	}
 }
+
 
 /**
  *	Add files to be committed
@@ -415,6 +553,14 @@ function repo_stage_files($tmp_key, $files = array()) {
 	}
 }
 
+
+// XXX: add to API
+function repo_touch($tmp_key) {
+	// update file modification time
+	@touch(tmp_dir($tmp_key);
+}
+
+
 /**
  *	Return the path for a tmp key
  *	@param $tmp_key tmp key
@@ -423,6 +569,7 @@ function repo_stage_files($tmp_key, $files = array()) {
 function tmp_dir($tmp_key) {
 	return rtrim(config('content_dir', 'content'), '/') . '/tmp/' . $tmp_key;
 }
+
 
 /**
  *	Return a tmp key based on the current request's timestamp
