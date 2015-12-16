@@ -5,6 +5,7 @@
 * RESTful [API](doc/api.md) for manipulating Git repositories
 * Render books using Makefiles, which are executed on the server
 * Multitude of templates to start from
+* Foster experimentation in Makefiles, scripts
 * Bootstrap book projects
 * Integration with GitHub
 * Automatic generation of output files whenever the user pushes to repository
