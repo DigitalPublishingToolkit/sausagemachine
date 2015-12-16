@@ -557,7 +557,7 @@ function repo_stage_files($tmp_key, $files = array()) {
 // XXX: add to API
 function repo_touch($tmp_key) {
 	// update file modification time
-	@touch(tmp_dir($tmp_key);
+	@touch(tmp_dir($tmp_key));
 }
 
 
