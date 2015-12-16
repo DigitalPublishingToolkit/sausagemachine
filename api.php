@@ -202,12 +202,58 @@ function api_get_temp_file($param = array()) {
 }
 
 
+/**
+ *	Update or create files in a temporary (working) repository
+ *	@param $param[1] temporary repository
+ *	@param $param['files'] array of { fn: 'bar', data: 'base64-encoded' }
+ */
+function api_post_temp_files_update($param = array()) {
+	$temp = $param[1];
+	if (!@is_dir(tmp_dir($temp))) {
+		router_error_404('Cannot get ' . $temp);
+	}
+
+	if (@is_array($param['files'])) {
+		$files = $param['files'];
+	} else {
+		router_error_400('Required parameter files missing or invalid');
+	}
+
+	$modified = array();
+	$old_umask = @umask(0000);
+	foreach ($files as $file) {
+		if (!@is_string($file['fn']) || !@is_string($file['data'])) {
+			// required field missing
+			continue;
+		}
+		if (strpos($file['fn'], '../') !== false) {
+			// thwart possible attempts to get to files outside of the content directory
+			continue;
+		}
+
+		// recursively create directories if needed
+		$pos = strrpos($file['fn'], '/');
+		if ($pos !== false) {
+			@mkdir(tmp_dir($temp) . '/' . substr($file['fn'], 0, $pos), 0777, true);
+		}
+
+		// save base64-encoded string as file
+		if (false !== @file_put_contents(tmp_dir($temp) . '/' . $file['fn'], @base64_decode($file['data']))) {
+			$modified[] = $file['fn'];
+		}
+	}
+	@umask($old_umask);
+	return array('modified' => $modified);
+}
+
+
 register_route('GET' , 'repos', 'api_get_repos');
 register_route('GET' , 'repos/targets/(.+)', 'api_get_repo_targets');
 register_route('GET' , 'temps', 'api_get_temps');
 register_route('POST', 'temps/create', 'api_post_temp_create');
 register_route('GET' , 'temps/([0-9]+)', 'api_get_temp');
 register_route('GET' , 'temps/files/([0-9]+)/(.+)', 'api_get_temp_file');
+register_route('POST', 'temps/files/update/([0-9]+)', 'api_post_temp_files_update');
 
 
 
