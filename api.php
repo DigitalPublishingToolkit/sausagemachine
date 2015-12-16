@@ -152,7 +152,7 @@ function api_get_temp($param = array()) {
 
 
 /**
- *	Get a file from a temporary (working) directory
+ *	Get a file from a temporary (working) repository
  *	@param $param[1] temporary repository
  *	@param $param[2] filename
  *	@param $param['format'] "download", "json" or "raw" (default)
