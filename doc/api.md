@@ -35,6 +35,7 @@ POST temps/create
 		temp: "14486397022961",
 		repo: "https://github.com/DigitalPublishingToolkit/template-test.git",
 		branch: "master",
+		commit: "4396da7ace5685b2a9b550155ce1c18b0125bb71",
 		files: [
 			"book.html",
 			"docx/hva_deliverables_2015_q4.docx"
@@ -49,6 +50,7 @@ GET temps/:temp
 		temp: "14486397022961",
 		repo: "https://github.com/DigitalPublishingToolkit/template-test.git",
 		branch: "master",
+		commit: "4396da7ace5685b2a9b550155ce1c18b0125bb71",
 		files: [
 			"book.html",
 			"docx/hva_deliverables_2015_q4.docx",
@@ -65,32 +67,41 @@ GET temps/:temp
 
 GET temps/files/:temp/:fn
 
-	param: format ("raw", "download", "json")
+	param: format ("raw", "download" or "json"; default: "raw")
 
 	if "json":
 
 	{
 		fn: "book.html",
 		mime: "text/html",
-		data: "..." (base64-encoded)
+		data: "base64-encoded data"
 	}
 
 POST temps/files/update/:temp
 
-	param: files (or HTTP upload)
-	param: auto_convert (default: no)
+	param: files (array of { fn: "filename", data: "base64-encoded data" })
 
 	{
-		converted: [
-			"md/foo.md"
-		],
 		modified: [
 			"docx/foo.docx",
 			"md/foo.md"
 		]
 	}
 
-	... converted: files created or modified by auto_convert
+	... modified: modified or newly added files (by this method)
+
+POST temps/files/update/:temp
+
+	param: uploaded files
+	param: auto_convert (default: true)
+
+	{
+		modified: [
+			"docx/foo.docx",
+			"md/foo.md"
+		]
+	}
+
 	... modified: modified or newly added files (by this method)
 
 POST temps/files/delete/:temp/:fn
@@ -99,6 +110,7 @@ POST temps/make/:temp
 
 	param: target (default: default_target config option)
 	param: clean_before (default: false)
+	param: clean_after (default: false)
 
 	{
 		target: "html",
@@ -117,12 +129,9 @@ POST temps/make/:temp
 POST temps/commit/:temp
 
 	param: files (default: all modified)
+	param: clean_before (default: true)
 	param: message (optional)
 	param: author (optional)
-
-	{
-		hash: "123"
-	}
 
 POST temps/push/:temp
 
@@ -131,8 +140,8 @@ POST temps/push/:temp
 POST temps/switch_repo/:temp
 
 	param: repo
-	param: clean_before (default: false)
-	param: clean_after (default: false)
+	param: clean_before (default: true)
+	param: clean_after (default: true)
 
 POST temps/delete/:temp
 
@@ -149,6 +158,10 @@ GET projects
 
 POST projects/create
 
+	param: key -> value
+
 POST projects/update/:repo
 
 	param: key -> value
+
+POST projects/delete/:repo
