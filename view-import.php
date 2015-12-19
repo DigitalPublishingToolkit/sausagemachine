@@ -21,100 +21,70 @@
 		<div class="columns">
 			<div class="one-half column">
 				<div class="blankslate" id="upload">
-					Drop here
+					Drop files here (e.g. Word documents)
 				</div>
 			</div>
 		</div?
 	</div>
 	<script src="js/jquery-2.1.4.min.js"></script>
+	<script src="js/sausagemachine.js"></script>
 	<script>
-		$(document).ready(function() {
-			var upload = document.getElementById('upload');
+		var upload = $('#upload');
 
-			upload.addEventListener('dragenter', function(e) {
-				$(this).addClass('upload-hovering');
-				e.stopPropagation();
-				e.preventDefault();
-			}, false);
-			upload.addEventListener('dragover', function(e) {
-				e.stopPropagation();
-				e.preventDefault();
-			}, false);
-			upload.addEventListener('dragleave', function(e) {
-				$(this).removeClass('upload-hovering');
-			}, false);
-			upload.addEventListener('drop', function(e) {
-				e.stopPropagation();
-				e.preventDefault();
-				var xhr = new XMLHttpRequest();
-				var formData = new FormData();
-				xhr.onload = function(e) {
-					var json = JSON.parse(this.response);
-					sessionStorage.tmp_key = json.tmp_key;
-					sessionStorage.repo = json.repo;
-					sessionStorage.uploaded = json.uploaded;
-					sessionStorage.generated = json.generated;
-					sessionStorage.files = json.files;
-					// convert to Markdown
-					$.ajax('json.php?convert', {
-						method: 'POST',
-						data: {
-							'tmp_key': json.tmp_key,
-							'target': 'html'
-						},
-						success: function(data) {
-							// XXX: do this in edit instead
-							var toFetch;
-							// look for generated Markdown files first
-							for (var i=0; i < data.generated.length; i++) {
-								var ext = data.generated[i].substring(data.generated[i].length-3).toLowerCase();
-								if (ext == '.md') {
-									toFetch = data.generated[i];
-									break;
-								}
-							}
-							// and for uploaded ones second
-							if (!toFetch) {
-								for (var i=0; i < data.files.length; i++) {
-									var ext = data.files[i].substring(data.files[i].length-3).toLowerCase();
-									if (ext == '.md') {
-										toFetch = data.files[i];
-										break;
-									}
-								}
-							}
-							if (toFetch) {
-								$.ajax('json.php?files', {
-									method: 'GET',
-									data: {
-										'tmp_key': sessionStorage.getItem('tmp_key'),
-										'files': [toFetch]
-									},
-									success: function(data) {
-										for (var first in data) break;
-										if (first) {
-											// save markdown in session storage
-											sessionStorage.setItem('markdown_fn', first);
-											sessionStorage.setItem('markdown', decodeURIComponent(escape(window.atob(data[first].data))));
-										}
-										// redirect
-										window.location = 'index.php?edit#' + sessionStorage.tmp_key;
-									}
-								});
-							} else {
-								// redirect instantly
-								window.location = 'index.php?edit#' + sessionStorage.tmp_key;
-							}
-						}
-					});
-				};
-				xhr.open('POST', 'json.php?upload_files');
-				xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-				for (var i=0; i < e.dataTransfer.files.length; i++) {
-					formData.append('uploads', e.dataTransfer.files[i]);
+		$(upload).on('dragover', function(e) {
+			$(this).addClass('upload-hovering');
+			return false;
+		});
+
+		$(upload).on('dragleave', function(e) {
+			$(this).removeClass('upload-hovering');
+			return false;
+		});
+
+		$(upload).on('drop', function(e) {
+			$(this).removeClass('upload-hovering');
+
+			// dropped files need to be read immediately
+			var formData = new FormData();
+			for (var i=0; i < e.originalEvent.dataTransfer.files.length; i++) {
+				formData.append('uploads', e.originalEvent.dataTransfer.files[i]);
+			}
+
+			var on_files_uploaded = function(data) {
+				data = JSON.parse(this.response);
+				// search for the first .md file
+				for (var i=0; i < data.modified.length; i++) {
+					var fn = data.modified[i];
+					if (fn.substring(fn.length-3) == '.md') {
+						$.sausagemachine._set('md-file', fn);
+						break;
+					}
 				}
+				// redirect to edit
+				window.location = 'index.php?edit#' + $.sausagemachine._get('temp');
+			};
+
+			var upload_files = function() {
+				var xhr = new XMLHttpRequest();
+				xhr.onload = on_files_uploaded;
+				xhr.open('POST', 'api.php?temps/files/upload/' + $.sausagemachine._get('temp'));
+				xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
 				xhr.send(formData);
-			}, false);
+			};
+
+			var on_temp_crated = function(data) {
+				$.sausagemachine._clear();
+				$.sausagemachine._set('temp', data.temp);
+				// upload dropped files to newly created temp
+				upload_files();
+			};
+
+			if ($.sausagemachine._get('temp')) {
+				upload_files();
+			} else {
+				$.sausagemachine.create_temp({}, on_temp_crated);
+			}
+			return false;
 		});
 	</script>
 </body>
