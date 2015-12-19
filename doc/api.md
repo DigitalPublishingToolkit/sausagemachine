@@ -12,11 +12,13 @@ GET repos
 
 GET repos/files/:repo
 
-	[
-		"book.html",
-		"docx/hva_deliverables_2015_q4.docx",
-		"Makefile"
-	]
+	{
+		files: [
+			"book.html",
+			"docx/hva_deliverables_2015_q4.docx",
+			"Makefile"
+		]
+	}
 
 GET repos/targets/:repo
 

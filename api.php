@@ -56,7 +56,7 @@ function api_get_repo_files($param = array()) {
 		router_error_500('Cannot get files of ' . $repo);
 	}
 
-	return $files;
+	return array('files' => $files);
 }
 
 
