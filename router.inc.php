@@ -73,7 +73,7 @@ function router($query_string, $method = 'GET') {
 	if (function_exists($func)) {
 		$ret = $func($args);
 	} else {
-		router_error_400('Route ' . $route . ' does not exist');
+		router_error_400('Route ' . $method . ' ' . $route . ' does not exist');
 	}
 
 	// return result
