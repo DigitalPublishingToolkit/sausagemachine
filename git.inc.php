@@ -436,6 +436,31 @@ function repo_get_all_files($tmp_key) {
 
 
 /**
+ *	Return all modified files in the working directory of a Git repository that were last modified after a given timestamp
+ *	@param $tmp_key tmp key
+ *	@param $after timestamp
+ *	@return array of filenames, or false if unsuccessful
+ */
+function repo_get_modified_files_after($tmp_key, $after) {
+	$modified = repo_get_modified_files($tmp_key);
+	if ($modified === false) {
+		return false;
+	}
+
+	// check file modification times
+	$modfied_after = array();
+	foreach ($modified as $fn) {
+		$mtime = @filemtime(tmp_dir($tmp_key) . '/' . $fn);
+		if ($mtime !== false && $after < $mtime) {
+			$modified_after[] = $fn;
+		}
+	}
+
+	return $modified_after;
+}
+
+
+/**
  *	Return all modified files in the working directory of a Git repository
  *	@param $tmp_key tmp key
  *	@return array of filenames, or false if unsuccessful
