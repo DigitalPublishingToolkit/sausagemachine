@@ -51,17 +51,8 @@
 			}
 
 			var on_files_uploaded = function(data) {
-				data = JSON.parse(this.response);
-				// search for the first .md file
-				for (var i=0; i < data.modified.length; i++) {
-					var fn = data.modified[i];
-					if (fn.substring(fn.length-3) == '.md') {
-						$.sausagemachine._set('md-file', fn);
-						break;
-					}
-				}
 				// redirect to edit
-				window.location = 'index.php?edit#' + $.sausagemachine._get('temp');
+				window.location = 'index.php?edit';
 			};
 
 			var upload_files = function() {
