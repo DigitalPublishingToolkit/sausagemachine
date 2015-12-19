@@ -27,6 +27,80 @@ $.sausagemachine._set = function(key, val) {
 	sessionStorage.setItem('state', JSON.stringify(data));
 };
 
+$.sausagemachine.get_repos = function(success, error) {
+	$.ajax({
+		url: 'api.php?repos',
+		error: function(jqXHR, textStatus, errorThrown) {
+			if (typeof error === 'function') {
+				error(jqXHR, textStatus, errorThrown);
+			} else {
+				console.error('Backend returned: ' + jqXHR.responseText);
+			}
+		},
+		method: 'get',
+		success: function(data) {
+			success(data);
+		},
+		dataType: 'json'
+	});
+};
+
+$.sausagemachine.get_repo_files = function(repo, success, error) {
+	$.ajax({
+		url: 'api.php?repos/files/' + repo,
+		error: function(jqXHR, textStatus, errorThrown) {
+			if (typeof error === 'function') {
+				error(jqXHR, textStatus, errorThrown);
+			} else {
+				console.error('Backend returned: ' + jqXHR.responseText);
+			}
+		},
+		method: 'get',
+		success: function(data) {
+			success(data.files);
+		},
+		dataType: 'json'
+	});
+};
+
+$.sausagemachine.get_temp_files = function(temp, success, error) {
+	$.ajax({
+		url: 'api.php?temps/' + temp,
+		error: function(jqXHR, textStatus, errorThrown) {
+			if (typeof error === 'function') {
+				error(jqXHR, textStatus, errorThrown);
+			} else {
+				console.error('Backend returned: ' + jqXHR.responseText);
+			}
+		},
+		method: 'get',
+		success: function(data) {
+			success(data.files);
+		},
+		dataType: 'json'
+	});
+};
+
+$.sausagemachine.get_targets = function(repo, success, error) {
+	$.ajax({
+		url: 'api.php?repos/targets/' + repo,
+		error: function(jqXHR, textStatus, errorThrown) {
+			if (typeof error === 'function') {
+				error(jqXHR, textStatus, errorThrown);
+			} else {
+				console.error('Backend returned: ' + jqXHR.responseText);
+			}
+		},
+		method: 'get',
+		success: function(data) {
+			if (typeof success === 'function') {
+				success(data);
+			}
+		},
+		dataType: 'json'
+	});
+};
+
 $.sausagemachine.create_temp = function(opt, success, error) {
 	opt = opt || {};
 	$.ajax({
