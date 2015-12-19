@@ -320,7 +320,7 @@ function repo_add_to_cache($url) {
  *	@return true if succesful, false if not
  */
 function repo_check_for_update($cache_key, $force = false) {
-	$mtime = @filemtime(cache_dir($cache_dir));
+	$mtime = @filemtime(cache_dir($cache_key));
 	if ($mtime === false) {
 		return false;
 	}
