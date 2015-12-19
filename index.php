@@ -26,9 +26,11 @@ function route_get_projects($param = array()) {
 	return render_php('view-projects.php');
 }
 
+
 register_route('GET', 'edit', 'route_get_edit');
 register_route('GET', 'import', 'route_get_import');
 register_route('GET', 'projects', 'route_get_import');
+
 
 
 // run router and return result as HTML
