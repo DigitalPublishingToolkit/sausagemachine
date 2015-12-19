@@ -666,6 +666,7 @@ function api_post_project_create($param = array()) {
 	if (!$project) {
 		$project = new stdClass();
 		$project->repo = $repo;
+		$project->created = time();
 		$json[] = $project;
 	}
 
@@ -677,6 +678,7 @@ function api_post_project_create($param = array()) {
 		}
 		$project->$key = $val;
 	}
+	$project->updated = time();
 
 	// save
 	// XXX: make atomic
