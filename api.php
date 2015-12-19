@@ -357,9 +357,16 @@ function inject_uploaded_file($tmp_key, $file, $auto_convert = true) {
 
 	if ($auto_convert) {
 		// convert Word documents instantaneously to Markdown
+		$start = time();
 		if (filext($dest_fn) === 'docx') {
-			// XXX
+			make_run(tmp_dir($tmp_key), 'markdowns');
 		}
+		$modified_after = repo_get_modified_files_after($tmp_key, $start-1);
+		// make sure the destination filename is part of th array
+		if (is_array($modified_after) && !in_array($dest_fn, $modified_after)) {
+			$modified_after[] = $dest_fn;
+		}
+		return $modified_after;
 	}
 
 	return array($dest_fn);
@@ -398,7 +405,12 @@ function api_post_temp_files_delete($param = array()) {
 }
 
 
-// XXX: doxygen
+/**
+ *	Run the Makefile in a temporary (working) repository
+ *	@param $param[1] temporary repository
+ *	@param $param[2] Makefile target (default: default_target configuration option)
+ *	@param $param['clean_before'] run "make clean" before the actual target (default: true)
+ */
 function api_post_temp_make($param = array()) {
 	$temp = $param[1];
 	if (empty($param[2])) {
@@ -426,16 +438,13 @@ function api_post_temp_make($param = array()) {
 	if ($clean_before) {
 		make_run(tmp_dir($temp), 'clean');
 	}
-
 	// run the actual Makefile
 	$start = time();
 	$ret_val = make_run(tmp_dir($temp), $target, $out);
-	// XXX: continue here
-	$modified = array();
-
 	if ($clean_after) {
 		make_run(tmp_dir($temp), 'clean');
 	}
+	$modified = repo_get_modified_files_after($temp, $start-1);
 
 	return array(
 		'target' => $target,
@@ -443,6 +452,284 @@ function api_post_temp_make($param = array()) {
 		'error' => ($ret_val === 0) ? false : $ret_val,
 		'out' => $out
 	);
+}
+
+
+/**
+ *	Commit files to a temporary (working) repository
+ *	@param $param[1] temporary repository
+ *	@param $param['files'] array of filenames to add (default: all modified files)
+ *	@param $param['clean_before'] run "make clean" before determining the modified files to add
+ *	@param $param['message'] commit message
+ *	@param $param['author'] author to commit as
+ */
+function api_post_temp_commit($param = array()) {
+	$temp = $param[1];
+	if (!@is_dir(tmp_dir($temp))) {
+		router_error_404('Cannot get ' . $temp);
+	}
+
+	if (isset($param['clean_before'])) {
+		$clean_before = (bool)$param['clean_before'];
+	} else {
+		$clean_before = true;
+	}
+
+	if ($clean_before) {
+		make_run(tmp_dir($temp), 'clean');
+	}
+
+	if (@is_array($param['files'])) {
+		$files = $param['files'];
+	} else {
+		// commit all modified files by default
+		$files = repo_get_modified_files($temp);
+	}
+	if (@is_string($param['message'])) {
+		$message = $param['message'];
+	} else {
+		$message = 'Add initial files';
+	}
+	if (@is_string($param['author'])) {
+		$author = $param['author'];
+	} else {
+		// XXX: default
+	}
+
+	// add files to repository
+	if (false === repo_stage_files($temp, $files)) {
+		router_error_500('Cannot add ' . implode(', ', $files) . ' to ' . $temp);
+	}
+
+	// commit
+	// XXX: , $author
+	if (false === repo_commit($temp, $message)) {
+		router_error_500('Cannot commit to ' . $temp);
+	}
+
+	// XXX: return commit
+	return true;
+}
+
+
+/**
+ *	Push a temporary (working) repository to a remote URL
+ *	@param $param[1] temporary (working) repository
+ *	@param $param['repo'] rempote URL
+ */
+function api_post_temp_push($param = array()) {
+	$temp = $param[1];
+	if (!@is_dir(tmp_dir($temp))) {
+		router_error_404('Cannot get ' . $temp);
+	}
+
+	if (empty($param['repo'])) {
+		router_error_400('Required parameter repo missing or empty');
+	}
+
+	return repo_push($temp, $param['repo']);
+}
+
+
+/**
+ *	Move modified files from a temporary (working) repository on top of another (template) repository
+ *	@param $param[1] temporary repository
+ *	@param $param['repo'] repository to switch to
+ *	@param $param['clean_before'] run "make clean" before determining the modified files (default: true)
+ *	@param $param['clean_after'] run "make clean" after determining the modified files (default: true)
+ */
+function api_post_temp_switch_repo($param = array()) {
+	// XXX: test
+	$temp = $param[1];
+	if (!@is_dir(tmp_dir($temp))) {
+		router_error_404('Cannot get ' . $temp);
+	}
+
+	if (empty($param['repo'])) {
+		router_error_400('Required parameter repo missing or empty');
+	} else {
+		$repo = $param['repo'];
+	}
+
+	// client can specify whether to run "make clean" before or after the switch
+	if (isset($param['clean_before'])) {
+		$clean_before = (bool)$param['clean_before'];
+	} else {
+		$clean_before = true;
+	}
+	if (isset($param['clean_after'])) {
+		$clean_after = (bool)$param['clean_after'];
+	} else {
+		$clean_after = true;
+	}
+
+	// create a new repository under a temporary name
+	$staging = get_repo($repo);
+	if ($staging === false) {
+		router_error_404('Cannot get ' . $repo);
+	}
+
+	// clean, if requested
+	if ($clean_before) {
+		make_run($temp, 'clean');
+	}
+
+	// copy the modified files over
+	$old_umask = @umask(0000);
+	foreach (repo_get_modified_files() as $fn) {
+		// make sure the containing directories exist
+		// XXX: make this a function in util
+		$pos = strrpos($fn, '/');
+		if ($pos !== false) {
+			@mkdir(tmp_dir($staging) . '/' . substr($fn, 0, $pos), 0777, true);
+		}
+		// copy
+		@copy(tmp_dir($temp) . '/' . $fn, tmp_dir($staging) . '/' . $fn);
+	}
+	@umask($old_umask);
+
+	// remove original repository
+	if (false === rm_recursive(tmp_dir($temp))) {
+		router_error_500('Cannot delete ' . $temp);
+	}
+
+	// move new repository to location of original repository
+	if (false === @rename(tmp_dir($staging), tmp_dir($temp))) {
+		router_error_500('Cannot rename ' . $staging . ' to ' . $temp);
+	}
+
+	// clean, if requested
+	if ($clean_after) {
+		make_run($temp, 'clean');
+	}
+
+	return true;
+}
+
+
+/**
+ *	Delete a temporary (working) repository
+ *	@param $param[1] temporary repository
+ */
+function api_post_temp_delete($param = array()) {
+	$temp = $param[1];
+	if (!@is_dir(tmp_dir($temp))) {
+		router_error_404('Cannot get ' . $temp);
+	}
+
+	if (false === rm_recursive(tmp_dir($temp))) {
+		router_error_500('Cannot delete ' . $temp);
+	}
+
+	return true;
+}
+
+
+/**
+ *	Get a list of projects registered with the system
+ */
+function api_get_projects($param = array()) {
+	$str = @file_get_contents(rtrim(config('content_dir', 'content'), '/') . '/projects.json');
+	$json = @json_decode($str);
+	if (!is_array($json)) {
+		return array();
+	} else {
+		// XXX: filter
+		return $json;
+	}
+}
+
+
+/**
+ *	Register or update a project with the system
+ *	@param $param[1] remote repository
+ *	@param $param[...] additional key -> value pairs
+ */
+function api_post_project_create($param = array()) {
+	$repo = $param[1];
+
+	// load
+	$str = @file_get_contents(rtrim(config('content_dir', 'content'), '/') . '/projects.json');
+	$json = @json_decode($str);
+	if (!is_array($json)) {
+		$json = array();
+	}
+
+	// check if the repo already exists
+	$project = NULL;
+	for ($i=0; $i < count($json); $i++) {
+		if (isset($json[$i]->repo) && $json[$i]->repo === $repo) {
+			$project = $json[$i];
+			break;
+		}
+	}
+	if (!$project) {
+		$project = new stdClass();
+		$project->repo = $repo;
+		$json[] = $project;
+	}
+
+	// add additional values
+	foreach ($param as $key => $val) {
+		// ignore router arguments
+		if (is_int($key)) {
+			continue;
+		}
+		$project->$key = $val;
+	}
+
+	// save
+	// XXX: make atomic
+	$str = @json_encode($json);
+	$old_umask = @umask(0000);
+	if (false === file_put_contents(rtrim(config('content_dir', 'content'), '/') . '/projects.json', $str)) {
+		@umask($old_umask);
+		router_error_500('Cannot save projects.json');
+	}
+	@umask($old_umask);
+
+	return true;
+}
+
+
+/**
+ *	Unregister a project with the system
+ *	@param $param[1] remote repository
+ */
+function api_post_project_delete($param = array()) {
+	$repo = $param[1];
+
+	// load
+	$str = @file_get_contents(rtrim(config('content_dir', 'content'), '/') . '/projects.json');
+	$json = @json_decode($str);
+	if (!is_array($json)) {
+		$json = array();
+	}
+
+	// search for repo
+	$found = false;
+	for ($i=0; $i < count($json); $i++) {
+		if (isset($json[$i]->repo) && $json[$i]->repo === $repo) {
+			array_splice($json, $i, 1);
+			$found = true;
+			break;
+		}
+	}
+
+	if (!$found) {
+		router_error_404('Cannot find project ' . $repo);
+	}
+
+	// save
+	$str = @json_encode($json);
+	$old_umask = @umask(0000);
+	if (false === file_put_contents(rtrim(config('content_dir', 'content'), '/') . '/projects.json', $str)) {
+		@umask($old_umask);
+		router_error_500('Cannot save projects.json');
+	}
+	@umask($old_umask);
+
+	return true;
 }
 
 
@@ -456,8 +743,15 @@ register_route('GET' , 'temps/files/([0-9]+)/(.+)', 'api_get_temp_file');
 register_route('POST', 'temps/files/update/([0-9]+)', 'api_post_temp_files_update');
 register_route('POST', 'temps/files/upload/([0-9]+)', 'api_post_temp_files_upload');
 register_route('POST', 'temps/files/delete/([0-9]+)/(.+)', 'api_post_temp_files_delete');
-// XXX: POST
-register_route('GET' , 'temps/make/([0-9]+)/?(.*)', 'api_post_temp_make');
+register_route('POST', 'temps/make/([0-9]+)/?(.*)', 'api_post_temp_make');
+register_route('POST', 'temps/commit/([0-9]+)', 'api_post_temp_commit');
+register_route('POST', 'temps/push/([0-9]+)', 'api_post_temp_push');
+register_route('POST', 'temps/switch_repo/([0-9]+)', 'api_post_temp_switch_repo');
+register_route('POST', 'temps/delete/([0-9]+)', 'api_post_temp_delete');
+register_route('GET' , 'projects', 'api_get_projects');
+register_route('POST', 'projects/create/(.+)', 'api_post_project_create');
+register_route('POST', 'projects/update/(.+)', 'api_post_project_create');
+register_route('POST', 'projects/delete/(.+)', 'api_post_project_delete');
 
 
 $query = $_SERVER['QUERY_STRING'];
