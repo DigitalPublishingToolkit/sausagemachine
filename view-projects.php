@@ -15,7 +15,7 @@
 				<a href="index.php?import" class="tabnav-tab">Import file(s)</a>
 				<a href="index.php?edit" class="tabnav-tab">Start a book</a>
 				<a href="index.php?projects" class="tabnav-tab selected">Book projects</a>
-				<a href="#" class="tabnav-tab">Tools</a>
+				<a href="index.php?about" class="tabnav-tab">About</a>
 			</nav>
 		</div>
 		<div class="columns">
