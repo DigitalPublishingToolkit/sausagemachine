@@ -381,6 +381,7 @@ function inject_uploaded_file($tmp_key, $file, $auto_convert = true) {
 		$start = time();
 		if (filext($dest_fn) === 'docx') {
 			make_run(tmp_dir($tmp_key), 'markdowns');
+			// XXX: clean?
 		}
 		$modified_after = repo_get_modified_files_after($tmp_key, $start-1);
 		// make sure the destination filename is part of th array
@@ -786,4 +787,5 @@ if ($pos !== false) {
 }
 // return JSON by default
 @header('Content-type: application/json; charset=utf-8');
+// XXX: 400
 echo json_encode(route($_SERVER['REQUEST_METHOD'], $query));
