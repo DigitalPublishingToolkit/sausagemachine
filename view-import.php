@@ -66,6 +66,7 @@
 			var on_temp_crated = function(data) {
 				$.sausagemachine._clear();
 				$.sausagemachine._set('temp', data.temp);
+				$.sausagemachine._set('repo', data.repo);
 				// upload dropped files to newly created temp
 				upload_files();
 			};
