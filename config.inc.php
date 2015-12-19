@@ -45,18 +45,18 @@ $config['repo_max_cached'] = 50;
 $config['repos'] = array(
 		array(
 			'repo' => 'https://github.com/DigitalPublishingToolkit/template-test.git',
-			'description' => 'PublishingLab default template'
+			'description' => 'PublishingLab default'
 		),
 		array (
 			'repo' => 'https://github.com/template01/template01-template-test.git',
-			'description' => 'template01 template'
+			'description' => 'template01'
 		)
 	);
 // readable titles for various Makefile targets
 $config['target_descriptions'] = array(
 		'book.epub' => 'EPUB',
 		'html' => 'Markdown as HTML',
-		'icmls' => 'ICML files for use with Adobe InDesign'
+		'icmls' => 'ICML for InDesign'
 	);
 // time in seconds before temporary (working) repositories get deleted
 $config['temp_max_age'] = 3600;
