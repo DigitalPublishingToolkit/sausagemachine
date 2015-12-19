@@ -414,8 +414,8 @@ function repo_commit($tmp_key, $msg, $author = 'Git User <username@example.edu>'
 }
 
 
-function repo_get_all_files($tmp_key) {
-	$fns = list_files_recursive(tmp_dir($tmp_key));
+function repo_get_all_files($repo_dir) {
+	$fns = list_files_recursive($repo_dir);
 	if ($fns === false) {
 		return false;
 	}

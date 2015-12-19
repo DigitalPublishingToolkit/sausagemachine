@@ -40,6 +40,27 @@ function api_get_repos($param = array()) {
 
 
 /**
+ *	Get a list of all files in a (template) repository
+ *	@param $param[1] (template) repository
+ */
+function api_get_repo_files($param = array()) {
+	$repo = $param[1];
+
+	$cached = get_repo_for_reading($repo);
+	if ($cached === false) {
+		router_error_404('Cannot get ' . $repo);
+	}
+
+	$files = repo_get_all_files(cache_dir($cached));
+	if ($files === false) {
+		router_error_500('Cannot get files of ' . $repo);
+	}
+
+	return $files;
+}
+
+
+/**
  *	Get a list of Makefile targets for a (template) repository
  *	@param $param[1] (template) repository
  */
@@ -123,7 +144,7 @@ function api_post_temp_create($param = array()) {
 		'branch' => 'master',
 		// XXX: implement
 		'commit' => '',
-		'files' => repo_get_all_files($temp)
+		'files' => repo_get_all_files(tmp_dir($temp))
 	);
 }
 
@@ -145,7 +166,7 @@ function api_get_temp($param = array()) {
 		'branch' => 'master',
 		// XXX: implement
 		'commit' => '',
-		'files' => repo_get_all_files($temp),
+		'files' => repo_get_all_files(tmp_dir($temp)),
 		'modified' => repo_get_modified_files($temp)
 	);
 }
@@ -737,6 +758,7 @@ function api_post_project_delete($param = array()) {
 
 
 register_route('GET' , 'repos', 'api_get_repos');
+register_route('GET' , 'repos/files/(.+)', 'api_get_repo_files');
 register_route('GET' , 'repos/targets/(.+)', 'api_get_repo_targets');
 register_route('GET' , 'temps', 'api_get_temps');
 register_route('POST', 'temps/create', 'api_post_temp_create');
