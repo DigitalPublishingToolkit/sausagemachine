@@ -19,7 +19,7 @@
 			</nav>
 		</div>
 		<div class="columns">
-			<div class="one-half column">
+			<div class="one-half column centered">
 				<div class="blankslate" id="upload">
 					Drop files here (e.g. Word documents)
 				</div>
