@@ -2,6 +2,7 @@
 
 @require_once('config.inc.php');
 require_once('router.inc.php');
+require_once('util.inc.php');
 
 
 /**
