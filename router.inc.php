@@ -23,6 +23,10 @@ function route($verb, $url, $param = array()) {
 	}
 
 	foreach ($_REQUEST as $key => $val) {
+		// the first parameter will end up as $param[0], $param[1], etc anyway, so ignore it here
+		if ($key === array_keys($_REQUEST)[0] && empty($val)) {
+			continue;
+		}
 		$param[$key] = $val;
 	}
 
