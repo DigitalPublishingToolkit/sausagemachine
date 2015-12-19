@@ -160,11 +160,13 @@ function api_get_temp($param = array()) {
 function api_get_temp_file($param = array()) {
 	$temp = $param[1];
 	$fn = $param[2];
+
 	if (strpos($fn, '../') !== false) {
 		// thwart possible attempts to get to files outside of the content directory
 		router_error_400('Illegal filename ' . $fn . ' for ' . $temp);
+	} else {
+		$path = tmp_dir($temp) . '/' . $fn;
 	}
-	$path = tmp_dir($temp) . '/' . $fn;
 
 	if (!@is_file($path)) {
 		router_error_404('Cannot get file ' . $fn . ' in ' . $temp);
@@ -247,6 +249,204 @@ function api_post_temp_files_update($param = array()) {
 }
 
 
+/**
+ *	Upload files to temporary (working) repository
+ *	@param $param[1] temporary repository
+ *	@param $_FILES uploaded files
+ *	@param $param['auto_convert'] convert certain file types (e.g. docx) instantaneously (default: true)
+ */
+function api_post_temp_files_upload($param = array()) {
+	$temp = $param[1];
+	if (!@is_dir(tmp_dir($temp))) {
+		router_error_404('Cannot get ' . $temp);
+	}
+
+	if (empty($_FILES)) {
+		router_error_400('No files uploaded');
+	}
+
+	if (isset($param['auto_convert'])) {
+		$auto_convert = (bool)$param['auto_convert'];
+	} else {
+		$auto_convert = true;
+	}
+
+	$modified = array();
+	$old_umask = @umask(0000);
+	foreach ($_FILES as $file) {
+		if (strpos($file['name'], '../') !== false) {
+			// thwart possible attempts to get to files outside of the content directory
+			continue;
+		}
+
+		// this uses a heuristic to place different file types
+		// in the right places
+		$ret = inject_uploaded_file($temp, $file, $auto_convert);
+		if (is_array($ret)) {
+			$modified = array_merge($modified, $ret);
+		}
+	}
+	@umask($old_umask);
+	return array('modified' => $modified);
+}
+
+
+// XXX: move to hybrid
+function get_uploaded_file_dest_fn($tmp_key, $orig_fn, $mime, $tmp_fn) {
+	// many relevant file formats still arive as "application/octet-stream"
+	// so ignore the MIME type for now, and focus solely on the extension
+	// of the original filename we got from the browser
+	$ext = strtolower(filext($orig_fn));
+
+	switch ($ext) {
+		case 'css':
+			// CSS
+			// XXX: implement in template
+			return 'epub/custom.css';
+		case 'docx':
+			// Word document
+			return 'docx/' . basename($orig_fn);
+		case 'gif':
+		case 'png':
+		case 'jpeg':
+		case 'jpg':
+			// image
+			if ($orig_fn === 'cover.jpg') {
+				// special case for the cover image
+				// XXX: make template accept .gif, .png, .jpeg as well
+				return 'epub/cover.jpg';
+			} else {
+				return 'md/imgs/' . basename($orig_fn);
+			}
+		case 'md':
+			return 'md/' . basename($orig_fn);
+		case 'otf':
+		case 'ttf':
+		case 'woff':
+		case 'woff2':
+			// font
+			return 'lib/' . basename($orig_fn);
+		default:
+			break;
+	}
+
+	// not supported
+	return false;
+}
+
+
+// XXX: move to hybrid
+function inject_uploaded_file($tmp_key, $file, $auto_convert = true) {
+	// establish destination filename
+	$dest_fn = get_uploaded_file_dest_fn($tmp_key, $file['name'], $file['type'], $file['tmp_name']);
+	if ($dest_fn === false) {
+		return array();
+	}
+
+	// make sure the containing directories exist
+	// XXX: make this a function in util
+	$pos = strrpos($dest_fn, '/');
+	if ($pos !== false) {
+		@mkdir(tmp_dir($tmp_key) . '/' . substr($dest_fn, 0, $pos), 0777, true);
+	}
+
+	// move to destination
+	if (false === @move_uploaded_file($file['tmp_name'], tmp_dir($tmp_key) . '/' . $dest_fn)) {
+		return array();
+	}
+
+	if ($auto_convert) {
+		// convert Word documents instantaneously to Markdown
+		if (filext($dest_fn) === 'docx') {
+			// XXX
+		}
+	}
+
+	return array($dest_fn);
+}
+
+
+/**
+ *	Delete a file in a temporary (working) repository
+ *	@param $param[1] temporary repository
+ *	@param $param[2] filename
+ */
+function api_post_temp_files_delete($param = array()) {
+	$temp = $param[1];
+	$fn = $param[2];
+
+	if (!@is_dir(tmp_dir($temp))) {
+		router_error_404('Cannot get ' . $temp);
+	}
+
+	if (strpos($fn, '../') !== false) {
+		// thwart possible attempts to get to files outside of the content directory
+		router_error_400('Illegal filename ' . $fn . ' for ' . $temp);
+	} else {
+		$path = tmp_dir($temp) . '/' . $fn;
+	}
+
+	if (!@is_file($path)) {
+		router_error_404('Cannot get file ' . $fn . ' in ' . $temp);
+	}
+
+	if (false === @unlink($path)) {
+		router_error_500('Cannot delete file ' . $fn . ' in ' . $temp);
+	} else {
+		return true;
+	}
+}
+
+
+// XXX: doxygen
+function api_post_temp_make($param = array()) {
+	$temp = $param[1];
+	if (empty($param[2])) {
+		$target = config('default_target');
+	} else {
+		$target = $param[2];
+	}
+
+	if (!@is_dir(tmp_dir($temp))) {
+		router_error_404('Cannot get ' . $temp);
+	}
+
+	// client can specify whether to run "make clean" before or after the actual target
+	if (isset($param['clean_before'])) {
+		$clean_before = (bool)$param['clean_before'];
+	} else {
+		$clean_before = false;
+	}
+	if (isset($param['clean_after'])) {
+		$clean_after = (bool)$param['clean_after'];
+	} else {
+		$clean_after = false;
+	}
+
+	if ($clean_before) {
+		make_run(tmp_dir($temp), 'clean');
+	}
+
+	// run the actual Makefile
+	$start = time();
+	$ret_val = make_run(tmp_dir($temp), $target, $out);
+	// XXX: continue here
+	$modified = array();
+
+	if ($clean_after) {
+		make_run(tmp_dir($temp), 'clean');
+	}
+
+	return array(
+		'target' => $target,
+		'modified' => $modified,
+		'error' => ($ret_val === 0) ? false : $ret_val,
+		'out' => $out
+	);
+}
+
+
+
 register_route('GET' , 'repos', 'api_get_repos');
 register_route('GET' , 'repos/targets/(.+)', 'api_get_repo_targets');
 register_route('GET' , 'temps', 'api_get_temps');
@@ -254,7 +454,10 @@ register_route('POST', 'temps/create', 'api_post_temp_create');
 register_route('GET' , 'temps/([0-9]+)', 'api_get_temp');
 register_route('GET' , 'temps/files/([0-9]+)/(.+)', 'api_get_temp_file');
 register_route('POST', 'temps/files/update/([0-9]+)', 'api_post_temp_files_update');
-
+register_route('POST', 'temps/files/upload/([0-9]+)', 'api_post_temp_files_upload');
+register_route('POST', 'temps/files/delete/([0-9]+)/(.+)', 'api_post_temp_files_delete');
+// XXX: POST
+register_route('GET' , 'temps/make/([0-9]+)/?(.*)', 'api_post_temp_make');
 
 
 $query = $_SERVER['QUERY_STRING'];
