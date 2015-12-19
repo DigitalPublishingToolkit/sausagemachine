@@ -19,11 +19,11 @@
 			</nav>
 		</div>
 		<div class="columns">
-			<div class="one-third column" style="position: relative;">
+			<div class="one-fifth column" style="position: relative;">
 				<div style="width: 100%; height: 100%; background-color: white; position: absolute; z-index: 1;" onmouseover="this.style.visibility='hidden'; var that = this; setTimeout(function() { that.style.visibility='visible'; }, 1000);"></div>
 				<iframe src="https://www.youtube.com/embed/oyXHA7xiChc?start=20" frameborder="0" style="width: 100%;"></iframe>
 			</div>
-			<div class="two-thirds column">
+			<div class="four-fifths column">
 				<div class="flash" style="margin-bottom: 2em; display: none;">
 					Your book project got created as <a href="" id="github-repo" target="_blank"></a> on Github. We will automagically update various output formats for you whenever you push to this repository.<br><br>
 					<a id="github-repo-clone" href="">Click here</a> to clone the repository to your own computer. We recommend the application <a href="http://macdown.uranusjr.com/" target="_blank">MacDown</a> for editing the Markdown files.
