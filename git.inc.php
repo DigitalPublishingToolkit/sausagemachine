@@ -195,7 +195,7 @@ function get_repo($url, $branch = 'master', $force_update = false) {
 		return false;
 	}
 
-	// XXX: this could be done asynchronously
+	// XXX (later): this could be done asynchronously
 	check_tmp_dir_age();
 
 	return $tmp_key;
@@ -233,7 +233,7 @@ function get_repo_for_reading($url, $force_update = false) {
 		}
 	}
 
-	// XXX: this could be done asynchronously
+	// XXX (later): this could be done asynchronously
 	check_cache_lru();
 
 	return $cache_key;

@@ -46,7 +46,7 @@ function get_uploaded_file_dest_fn($tmp_key, $orig_fn, $mime, $tmp_fn) {
 	switch ($ext) {
 		case 'css':
 			// CSS
-			// XXX: implement in template
+			// XXX (later): implement in template
 			return 'epub/custom.css';
 		case 'docx':
 			// Word document
@@ -58,7 +58,7 @@ function get_uploaded_file_dest_fn($tmp_key, $orig_fn, $mime, $tmp_fn) {
 			// image
 			if ($orig_fn === 'cover.jpg') {
 				// special case for the cover image
-				// XXX: make template accept .gif, .png, .jpeg as well
+				// XXX (later): make template accept .gif, .png, .jpeg as well
 				return 'epub/cover.jpg';
 			} else {
 				return 'md/imgs/' . basename($orig_fn);
@@ -100,7 +100,7 @@ function inject_uploaded_file($tmp_key, $file, $auto_convert = true) {
 		$start = time();
 		if (filext($dest_fn) === 'docx') {
 			make_run(tmp_dir($tmp_key), 'markdowns');
-			// XXX: clean?
+			// XXX (later): run "make clean" here?
 		}
 		$modified_after = repo_get_modified_files_after($tmp_key, $start-1);
 		// make sure the destination filename is part of th array

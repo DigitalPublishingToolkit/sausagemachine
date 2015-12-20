@@ -608,7 +608,7 @@ function api_get_projects($param = array()) {
 	if (!is_array($json)) {
 		return array();
 	} else {
-		// XXX: filter
+		// XXX (later): filter email addresses etc, also add .htacess rule to prevent direct access
 		return $json;
 	}
 }
