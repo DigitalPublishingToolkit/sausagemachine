@@ -11,11 +11,52 @@
 	padding-top: 20px;
 }
 
+#textarea-and-result {
+	position: relative;
+	margin-bottom: 20px;
+}
+
+#result {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	display: none;
+	border-radius: 4px;
+	background-color: rgba(250, 250, 250, 0.9);
+}
+
+#result-content {
+	height: calc(100% - 33px);
+	max-height: calc(100% - 33px);
+	overflow: scroll;
+	padding: 15px;
+}
+
+#result-content iframe {
+	border: none;
+	width: 100%;
+	height: 100%;
+}
+
+#result-content-files p {
+	text-align: center;
+}
+
+#result-header {
+	text-align: center;
+	margin-top: 0px;
+	height: 20px;
+	overflow: hidden;
+	color: #666;
+}
+
 textarea {
 	width: 100%;
 	max-width: 100%;
 	height: 400px;
-	margin-bottom: 20px;
+	font-size: 12px;
+	/* this is from GitHub */
+	font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
 }
 
 .boxed-group {
@@ -58,12 +99,6 @@ li .counter {
 	position: absolute;
 	right: 9px;
 	top: 20px;
-}
-
-.result {
-	height: 313px;
-	margin-bottom: 20px;
-	overflow-y: scroll;
 }
 
 .result-html {
@@ -110,15 +145,20 @@ select:not([multiple]) {
 #files li {
 	border: 0;
 	padding: 0;
+	word-break: break-word;
+	margin: 3px 0;
 }
 
 #files li:hover {
-	background-color: orange;
+	/*background-color: #8add6d;*/
+	font-style: italic;
 	cursor: pointer;
 }
 
 #files .file-selected {
-	font-style: italic;
+	font-weight: bold;
+	/*background-color: #f7f7f7;*/
+	list-style-type: square;
 }
 
 .btn {

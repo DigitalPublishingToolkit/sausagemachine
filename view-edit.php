@@ -15,254 +15,375 @@
 				<a href="index.php?import" class="tabnav-tab">Import file(s)</a>
 				<a href="index.php?edit" class="tabnav-tab selected">Start a book</a>
 				<a href="index.php?projects" class="tabnav-tab">Book projects</a>
-				<a href="#" class="tabnav-tab">Tools</a>
+				<a href="index.php?about" class="tabnav-tab">About</a>
 			</nav>
 		</div>
 		<div class="columns">
-			<div class="one-half column">
-				<textarea id="markdown" placeholder="Enter text here"></textarea>
+			<div class="one-fifth column">
+				<ol id="files">
+					&nbsp;
+				</ol>
 			</div>
-			<div class="one-half column">
-				<div class="result blankslate">
-					Write <a href="https://daringfireball.net/projects/markdown/syntax" target="_blank">Markdown</a> on your left
+			<div class="four-fifths column">
+				<div id="textarea-and-result">
+					<div id="result">
+						<p id="result-header">click to close</p>
+						<div id="result-content">
+						</div>
+					</div>
+					<textarea id="markdown" placeholder="Enter Markdown here"></textarea>
 				</div>
 				<div class="options-line">
 					<label><span class="tooltipped tooltipped-n" aria-label="Select one of our repositories to base your work on">Template</span></label>
 					<select id="repo-sel"></select>
+					<label><span class="tooltipped tooltipped-nw" aria-label="Which format do you want to convert the text to">Output</span></label>
+					<select id="target-sel"></select>
 				</div>
 				<div class="options-line">
-					<label><span class="tooltipped tooltipped-n" aria-label="Which format do you want to convert the text to">Output</span></label>
-					<select id="target-sel"></select>
+					<button type="button" id="btn-project" class="btn" disabled="disabled">Log into GitHub</button>
+					<button type="button" id="btn-convert" class="btn btn-primary">Save</button>
 				</div>
 			</div>
 		</div>
-		<div class="form-actions">
-			<button type="button" id="btn-convert" class="btn btn-primary">Convert</button>
-			<button type="button" id="btn-project" class="btn">Log into GitHub</button>
-		</div>
 	</div>
 	<script src="js/jquery-2.1.4.min.js"></script>
+	<script src="js/sausagemachine.js"></script>
 	<script>
-		$(document).ready(function() {
-
-			var hash = window.location.hash.substring(1);
-			if (hash != sessionStorage.getItem('tmp_key')) {
-				//if (hash.length) {
-					sessionStorage.clear();
-					sessionStorage.setItem('tmp_key', hash);
-				//} else {
-				//	window.location.hash = '#' + sessionStorage.getItem('tmp_key');
-				//}
-			}
-
-			if (sessionStorage.markdown) {
-				document.getElementById('markdown').innerHTML = sessionStorage.markdown;
-			}
-
-			var updateRepos = function() {
-				$.ajax('json.php?repos', {
-					method: 'GET',
-					dataType: 'json',
-					success: function(data) {
-						$.each(data, function() {
-							var option = document.createElement('option');
-							option.innerHTML = this.description;
-							option.value = this.repo;
-							if (this.default) {
-								option.selected = true;
+		var convert = function() {
+			// upload current file to temporary repository
+			var fn = $('#files .file-selected').first().text();
+			var md = $('#markdown').val();
+			var files = [{
+				fn: fn,
+				data: btoa(unescape(encodeURIComponent(md)))
+			}];
+			$.sausagemachine.update_temp_files($.sausagemachine._get('temp'), files, function(data) {
+				// mark file as saved
+				$('#markdown').data('changed', null);
+				// run Makefile
+				$.sausagemachine.make_temp($.sausagemachine._get('temp'), $('#target-sel').val(), function(data) {
+					if (data.error) {
+						// show error messages
+						var error = $('<div class="flash flash-error"> \
+										There was a problem executing the template\'s Makefile. \
+										The process returned error code ' + data.error + '. \
+										You might want to contact the autor of the <a href="' + $.sausagemachine._get('repo') + '" target="_blank">template</a> for more information. \
+										<br><br>\
+										Output:<br>\
+										</div>');
+						for (var i=0; i < data.out.length; i++) {
+							$(error).append(data.out[i] + '<br>');
+						}
+						$('#result-content').html(error);
+					} else {
+						// determine which file to show
+						var html = null;
+						for (var i=0; i < data.modified.length; i++) {
+							var fn = data.modified[i];
+							if (fn.lastIndexOf('.') !== -1) {
+								var ext = fn.substring(fn.lastIndexOf('.')+1);
+							} else {
+								var ext = '';
 							}
-							document.getElementById('repo-sel').appendChild(option);
-							updateTargets(this.repo);
-						});
-					}
-				});
-			};
-
-			var updateTargets = function(repo) {
-				$.ajax('json.php?targets&repo='+repo, {
-					method: 'GET',
-					dataType: 'json',
-					success: function(data) {
-						document.getElementById('target-sel').innerHTML = '';
-						$.each(data, function() {
-							var option = document.createElement('option');
-							option.innerHTML = this.description;
-							option.value = this.target;
-							if (this.default) {
-								option.selected = true;
+							if (ext == 'html') {
+								html = fn;
+								break;
 							}
-							document.getElementById('target-sel').appendChild(option);
-						});
-					}
-				});
-			};
-
-			var select = document.getElementById('repo-sel');
-			select.addEventListener('change', function(e) {
-				if (this.selectedIndex == -1) {
-					updateTargets(this[this.selectedIndex].value);
-				}
-			});
-
-			updateRepos();
-
-
-			// taken from http://stackoverflow.com/questions/16245767/creating-a-blob-from-a-base64-string-in-javascript
-			function b64toBlob(b64Data, contentType, sliceSize) {
-			    contentType = contentType || '';
-			    sliceSize = sliceSize || 512;
-			    var byteCharacters = atob(b64Data);
-			    var byteArrays = [];
-			    for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
-			        var slice = byteCharacters.slice(offset, offset + sliceSize);
-			        var byteNumbers = new Array(slice.length);
-			        for (var i = 0; i < slice.length; i++) {
-			            byteNumbers[i] = slice.charCodeAt(i);
-			        }
-			        var byteArray = new Uint8Array(byteNumbers);
-			        byteArrays.push(byteArray);
-			    }
-			    var blob = new Blob(byteArrays, {type: contentType});
-			    return blob;
-			}
-
-
-			var convert = document.getElementById('btn-convert');
-			convert.addEventListener('click', function(e) {
-				var repo = document.getElementById('repo-sel').value;
-				var target = document.getElementById('target-sel').value;
-				$('.result').html('Converting...');
-				$('.result').removeClass('result-html');
-				// XXX: fix book.md & tmp.md logic in Makefile
-				var files = {};
-				var markdown_fn = 'md/seed.md';
-				if (sessionStorage.getItem('markdown_fn')) {
-					markdown_fn = sessionStorage.getItem('markdown_fn');
-				}
-				files[markdown_fn] = document.getElementById('markdown').value;
-				$.ajax('json.php?convert', {
-					method: 'POST',
-					data: {
-						'tmp_key': sessionStorage.getItem('tmp_key'),
-						'repo': repo,
-						'target': target,
-						'files': files
-					},
-					success: function(data) {
-						sessionStorage.setItem('tmp_key', data.tmp_key);
-						window.location.hash = '#' + data.tmp_key;
-						sessionStorage.setItem('markdown', document.getElementById('markdown').value);
-						var project = document.getElementById('btn-project');
-						project.style.visibility = 'visible';
-
-						$.ajax('json.php?files', {
-							method: 'GET',
-							data: {
-								'tmp_key': sessionStorage.getItem('tmp_key'),
-								'files': data.generated
-							},
-							success: function(data) {
-								for (var fn in data) {
-									var blob = b64toBlob(data[fn].data, data[fn].mime);
-									var blobUrl = URL.createObjectURL(blob);
-									if (data[fn].mime == 'text/html') {
-										var html = decodeURIComponent(escape(window.atob(data[fn].data)));
-										$('.result').html(html);
-										$('.result').addClass('result-html');
-									} else {
-										$('.result').html('<a href="' + blobUrl + '" download="' + fn + '"><button type="button" class="btn btn-primary">' + fn + '</button></a>');
-									}
-									break;
-								}
-							}
-						});
-						/*
-						var blob = b64toBlob(data.data, data.mime);
-						console.log(blob);
-						var blobUrl = URL.createObjectURL(blob);
-						console.log(blobUrl);
-
-						var a = $('<a></a>');
-						a.attr('href', blobUrl);
-						a.attr('download', data.fn);
-						a.text('download');
-
-						$('.result').html(a);
-						*/
-						// XXX: binary data?
-						/*
-						var mime = xhr.getResponseHeader('content-type');
-						if (mime == 'text/html; charset=utf-8') {
-							$('.result').html(data);							
+						}
+						// if the conversion returned an HTML file, we display it in an iFrame
+						// else offer all modified files for download
+						if (html) {
+							var iframe = $('<iframe src="api.php?temps/files/' + $.sausagemachine._get('temp') + '/' + html + '"></iframe>');
+							$('#result-content').html(iframe);
 						} else {
-							$('.result').text(data);
+							$('#result-content').html('<div id="result-content-files"></div>');
+							for (var i=0; i < data.modified.length; i++) {
+								var fn = data.modified[i];
+								var btn = $('<p><a class="btn" role="button" href="api.php?temps/files/' + $.sausagemachine._get('temp') + '/' + fn + '" download="' + fn + '">' + fn + '</a></p>');
+								$('#result-content-files').append(btn);
+							}
 						}
-						$('.result').css('text-align', 'left');
-						console.log(data);
-						console.log(mime);
-						*/
-
+						// XXX (later): update list of files on the left?
 					}
+					$('#result').show({duration: 'fast'});
 				});
 			});
+		};
 
-			// helper function, move
-			var getCookieValue = function(name) {
-				var ret = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
-				return ret ? ret.pop() : null;
+		var load_file = function(fn) {
+			var on_file_loaded = function(data) {
+				$('#markdown').val(data);
 			}
 
-			// set sessionStorage according to cookie, if set
-			var github_access_token = getCookieValue('github_access_token');
-			if (github_access_token) {
-				sessionStorage.setItem('github_access_token', github_access_token);
+			// we either load a file from the template or the temp repository, depending on where we are
+			if ($.sausagemachine._get('temp')) {
+				$.sausagemachine.get_temp_file($.sausagemachine._get('temp'), fn, on_file_loaded);
+			} else {
+				$.sausagemachine.get_repo_file($.sausagemachine._get('repo'), fn, on_file_loaded);
+			}
+		};
+
+		var load_files = function(repo) {
+			var on_files_loaded = function(files) {
+				// success, populate file menu
+				$('#files').html('');
+				for (var i=0; i < files.length; i++) {
+					var fn = files[i];
+					var pos = fn.lastIndexOf('.');
+					if (pos != -1) {
+						var ext = fn.substring(pos+1);
+					} else {
+						var ext = '';
+					}
+					if (fn.substr(0, 3) == 'md/' && ext == 'md') {
+						var li = $('<li class="file-md">' + fn + '</li>');
+					}
+					if (ext == 'gif' || ext == 'jpg' || ext == 'jpeg' || ext == 'png') {
+						var li = $('<li class="file-img"><span class="tooltipped tooltipped-se" aria-label="Images can be referenced in Markdown documents">' + fn + '</span></li>');
+					}
+					if (fn == 'Makefile' || fn == 'makefile') {
+						var li = $('<li class="file-makefile"><span class="tooltipped tooltipped-se" aria-label="Makefiles contain the recipes for creating books">' + fn + '</span></li>');
+					}
+					if (ext == 'css') {
+						var li = $('<li class="file-css"><span class="tooltipped tooltipped-se" aria-label="CSS files determine the look for various output formats">' + fn + '</span></li>');
+					}
+					$('#files').append(li);
+				}
+				if ($('.file-md').length == 0) {
+					// if there is nothing else, add a dummy seed entry
+					var li = $('<li class="file-md file-new">md/seed.md</li>');
+					$('#files').append(li);
+				}
+				$('#files .file-md').first().each(function() {
+					$(this).addClass('file-selected');
+					if (!$(this).is('.file-new')) {
+						load_file($(this).text());
+					}
+				});
+			};
+
+			var on_files_error = function() {
+				$('#files').html('');
+			};
+
+			if ($.sausagemachine._get('repo') === repo && $.sausagemachine._get('temp')) {
+				// if we have a temporary repository, use this one
+				$.sausagemachine.get_temp_files($.sausagemachine._get('temp'), on_files_loaded, on_files_error);
+			} else {
+				// else list files in the template
+				$.sausagemachine.get_repo_files(repo, on_files_loaded, on_files_error);
+			}
+		};
+
+		var load_targets = function(repo) {
+			$.sausagemachine.get_targets(repo, function(targets) {
+				// success, populate target dropdown
+				$('#target-sel').html('');
+				$.each(targets, function() {
+					var option = $('<option value="' + this.target + '">' + this.description + '</option>');
+					if (this.default) {
+						$(option).attr('selected', 'selected');
+					}
+					$('#target-sel').append(option);
+				});
+			}, function() {
+				// error
+				$('#target-sel').html('');
+			});
+		};
+
+		var on_repos_loaded = function(repos) {
+			var repo = $.sausagemachine._get('repo');
+			$.each(repos, function() {
+				// populate repo dropdown
+				var option = $('<option value="' + this.repo + '">' + this.description + '</option>');
+				if (repo && repo === this.repo) {
+					// select the current temp's repo
+					option.attr('selected', 'selected');
+				} else if (!repo && this.default) {
+					// else the global default
+					option.attr('selected', 'selected');
+					// this also sets repo in sessionStorage
+					$.sausagemachine._set('repo', this.repo);
+				}
+				$('#repo-sel').append(option);
+			});
+			// refresh files and targets
+			load_files($.sausagemachine._get('repo'));
+			load_targets($.sausagemachine._get('repo'));
+		};
+
+		// start by requesting all template repositories
+		$.sausagemachine.get_repos(on_repos_loaded);
+
+		// enable the GitHub button if we have a temporary repository
+		if ($.sausagemachine._get('temp')) {
+			$('#btn-project').removeAttr('disabled');
+		}
+
+		$('#repo-sel').on('change', function() {
+			// prompt for confirmation before overwriting changes
+			if ($('#markdown').data('changed')) {
+				if (!confirm('You have unsaved changes. Continue?')) {
+					$(this).val($.sausagemachine._get('repo'));
+					return;
+				} else {
+					$('#markdown').data('changed', null);
+				}
 			}
 
-			var project = document.getElementById('btn-project');
-			if (!sessionStorage.getItem('tmp_key')) {
-				project.style.visibility = 'hidden';
-			}
-			if (!github_access_token) {
-				project.innerHTML = 'Log into GitHub';
-				project.addEventListener('click', function(e) {
-					$.ajax('json.php?github_auth', {
-						method: 'GET',
-						data: {
-							'target': window.location.href
-						},
-						dataType: 'json',
-						success: function(data, textStatus, xhr) {
-							window.location = data;
-						}
-					});
+			$.sausagemachine._set('repo', $(this).val());
+			if ($.sausagemachine._get('temp')) {
+				// migrate existing repo to selected one
+				$.sausagemachine.switch_repo($.sausagemachine._get('temp'), $.sausagemachine._get('repo'), function(data) {
+					// refresh files and targets
+					load_files($.sausagemachine._get('repo'));
+					load_targets($.sausagemachine._get('repo'));
 				});
 			} else {
-				project.innerHTML = 'Create project on GitHub';
+				// refresh files and targets
+				load_files($.sausagemachine._get('repo'));
+				load_targets($.sausagemachine._get('repo'));
+			}
+		});
 
-				project.addEventListener('click', function(e) {
-					var github_repo_name = prompt("Name of the repository");
-					if (!github_repo_name) {
-						return;
-					}
-
-					$.ajax('json.php?github_repo', {
-						method: 'POST',
-						data: {
-							'tmp_key': sessionStorage.getItem('tmp_key'),
-							'github_access_token': sessionStorage.getItem('github_access_token'),
-							'github_repo_name': github_repo_name
-						},
-						dataType: 'json',
-						success: function(data, textStatus, xhr) {
-							sessionStorage.clear();
-							sessionStorage.setItem('github_repo', data);
-							window.location = 'index.php?projects';
-						}
-					});
+		$('#btn-convert').on('click', function() {
+			// make sure we have a temporary repository, then upload & convert
+			if (!$.sausagemachine._get('temp')) {
+				$.sausagemachine.create_temp({
+					repo: $.sausagemachine._get('repo')
+				}, function(temp) {
+					$.sausagemachine._set('temp', temp.temp);
+					$('#btn-project').removeAttr('disabled');
+					convert();
 				});
+			} else {
+				convert();
+			}
+		});
+
+		$('#result').on('click', function(e) {
+			// don't hide overlay when clicking a download link
+			if ($(e.target).parents('#result-content').length) {
+				return;
+			}
+			$(this).hide({duration: 'fast'});
+		});
+
+		$('#markdown').on('change', function(e) {
+			// track when the textfield got edited
+			$(this).data('changed', true);
+		});
+
+		$('#files').on('click', 'li', function(e) {
+			// get the file's extension
+			var fn = $(this).text();
+			var pos = fn.lastIndexOf('.');
+			if (pos != -1) {
+				var ext = fn.substring(pos+1);
+			} else {
+				var ext = '';
+			}
+			// special case for images, those don't ever get "selected" per se
+			if (ext == 'gif' || ext == 'jpg' || ext == 'jpeg' || ext == 'png') {
+				// add to textarea
+				var text = $('#markdown').val();
+				var cursor = $('#markdown')[0].selectionStart;
+				var toInsert = '![](' + fn + ')';
+				$('#markdown').val(text.substring(0, cursor) + toInsert + text.substring(cursor));
+				return;
 			}
 
+			// prompt for confirmation before overwriting changes
+			if ($('#markdown').data('changed')) {
+				if (!confirm('You have unsaved changes. Continue?')) {
+					return;
+				} else {
+					$('#markdown').data('changed', null);
+				}
+			}
+			// switch selection
+			$('.file-selected').removeClass('file-selected');
+			$(this).addClass('file-selected');
+			load_file($(this).text());
 		});
+
+		// helper function, move
+		var getCookieValue = function(name) {
+			var ret = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+			return ret ? ret.pop() : null;
+		}
+
+		// set sessionStorage according to cookie, if set
+		var github_access_token = getCookieValue('github_access_token');
+		if (github_access_token) {
+			$.sausagemachine._set('github_access_token', github_access_token);
+			$('#btn-project').text('Continue on GitHub');
+		}
+
+		$('#btn-project').on('click', function(e) {
+			// prompt for confirmation before overwriting changes
+			if ($('#markdown').data('changed')) {
+				if (!confirm('You have unsaved changes. Continue?')) {
+					return;
+				} else {
+					$('#markdown').data('changed', null);
+				}
+			}
+
+			if (!$.sausagemachine._get('github_access_token')) {
+				// log into GitHub (will navigate away)
+				$.ajax('github.php?auth', {
+					method: 'get',
+					data: {
+						'target': window.location.href
+					},
+					dataType: 'json',
+					success: function(data) {
+						window.location = data;
+					}
+				});
+			} else {
+				// create a repository on the use's GitHub account
+				var github_repo_name = prompt("Name of the repository");
+				if (!github_repo_name) {
+					return;
+				}
+				$.ajax('github.php?repo', {
+					method: 'POST',
+					data: {
+						'temp': $.sausagemachine._get('temp'),
+						'github_access_token': $.sausagemachine._get('github_access_token'),
+						'github_repo_name': github_repo_name
+					},
+					dataType: 'json',
+					error: function(jqXHR, textStatus, errorThrown) {
+						alert(jqXHR.responseText);
+					},
+					success: function(data, textStatus, xhr) {
+						$.sausagemachine._clear();
+						$.sausagemachine._set('github_repo', data);
+						//window.location = 'index.php?projects';
+						console.log(data);
+					}
+				});
+			}
+		});
+
+
+		/*
+
+		// the url has #temp, but optionally
+		var hash = window.location.hash.substring(1);
+		if (hash.length == 0 && $.sausagemachine._get('temp')) {
+			// set hash based on sessionStorage
+			window.location.hash = '#' + $.sausagemachine._get('temp');
+		} else if (hash !== $.sausagemachine._get('temp')) {
+			// set sessionStorage based on hash
+			$.sausagemachine._clear();
+			$.sausagemachine._set('temp', hash);
+		}
+		*/
 	</script>
 </body>
 </html>

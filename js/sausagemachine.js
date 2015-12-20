@@ -93,9 +93,7 @@ $.sausagemachine.get_targets = function(repo, success, error) {
 		},
 		method: 'get',
 		success: function(data) {
-			if (typeof success === 'function') {
-				success(data);
-			}
+			success(data);
 		},
 		dataType: 'json'
 	});
@@ -115,9 +113,106 @@ $.sausagemachine.create_temp = function(opt, success, error) {
 		},
 		method: 'post',
 		success: function(data) {
-			if (typeof success === 'function') {
-				success(data);
+			success(data);
+		},
+		dataType: 'json'
+	});
+};
+
+$.sausagemachine.update_temp_files = function(temp, files, success, error) {
+	$.ajax({
+		url: 'api.php?temps/files/update/' + temp,
+		data: {
+			files: files
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+			if (typeof error === 'function') {
+				error(jqXHR, textStatus, errorThrown);
+			} else {
+				console.error('Backend returned: ' + jqXHR.responseText);
 			}
+		},
+		method: 'post',
+		success: function(data) {
+			success(data);
+		},
+		dataType: 'json'
+	});
+};
+
+$.sausagemachine.make_temp = function(temp, target, success, error) {
+	$.ajax({
+		url: 'api.php?temps/make/' + temp + '/' + target,
+		error: function(jqXHR, textStatus, errorThrown) {
+			if (typeof error === 'function') {
+				error(jqXHR, textStatus, errorThrown);
+			} else {
+				console.error('Backend returned: ' + jqXHR.responseText);
+			}
+		},
+		method: 'post',
+		success: function(data) {
+			success(data);
+		},
+		dataType: 'json'
+	});
+};
+
+$.sausagemachine.get_repo_file = function(repo, fn, success, error) {
+	$.ajax({
+		url: 'api.php?repos/files/raw/' + repo,
+		data: {
+			fn: fn
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+			if (typeof error === 'function') {
+				error(jqXHR, textStatus, errorThrown);
+			} else {
+				console.error('Backend returned: ' + jqXHR.responseText);
+			}
+		},
+		method: 'get',
+		success: function(data) {
+			success(data);
+		},
+		dataType: 'text'
+	});
+};
+
+$.sausagemachine.get_temp_file = function(temp, fn, success, error) {
+	$.ajax({
+		url: 'api.php?temps/files/' + temp + '/' + fn,
+		error: function(jqXHR, textStatus, errorThrown) {
+			if (typeof error === 'function') {
+				error(jqXHR, textStatus, errorThrown);
+			} else {
+				console.error('Backend returned: ' + jqXHR.responseText);
+			}
+		},
+		method: 'get',
+		success: function(data) {
+			success(data);
+		},
+		dataType: 'text'
+	});
+};
+
+$.sausagemachine.switch_repo = function(temp, repo, success, error) {
+	$.ajax({
+		url: 'api.php?temps/switch_repo/' + temp,
+		data: {
+			repo: repo
+		},
+		error: function(jqXHR, textStatus, errorThrown) {
+			if (typeof error === 'function') {
+				error(jqXHR, textStatus, errorThrown);
+			} else {
+				console.error('Backend returned: ' + jqXHR.responseText);
+			}
+		},
+		method: 'post',
+		success: function(data) {
+			success(data);
 		},
 		dataType: 'json'
 	});
