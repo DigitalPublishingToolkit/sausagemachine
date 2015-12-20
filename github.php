@@ -1,5 +1,23 @@
 <?php
 
+/*
+	GitHub integration for Sausage Machine
+	Copyright (C) 2015  Gottfried Haider for PublishingLab
+
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 @require_once('config.inc.php');
 require_once('git.inc.php');
 require_once('makefile.inc.php');
@@ -8,10 +26,12 @@ require_once('vendor/OAuth2/Client.php');
 require_once('vendor/OAuth2/GrantType/IGrantType.php');
 require_once('vendor/OAuth2/GrantType/AuthorizationCode.php');
 
+
 // XXX: move
 function base_url() {
 	return 'http://sukzessiv.net/newage2/';
 }
+
 
 /**
  *	Get the URL to redirect a client to in order to get a GitHub authentication token
@@ -28,6 +48,7 @@ function github_get_auth($param = array()) {
 	$auth_url = $client->getAuthenticationUrl('https://github.com/login/oauth/authorize', $redirect_uri, array('scope' => 'public_repo'));
 	return $auth_url;
 }
+
 
 /**
  *	Called by GitHub - set the access token as cookie and redirect to URL specified by client
@@ -58,6 +79,7 @@ function github_get_auth_callback($param = array()) {
 	@header('Location: ' . (!empty($param['target']) ? $param['target'] : base_url()));
 	die();
 }
+
 
 /**
  *	Create a repository on GitHub and push a local (temporary) repository to it
@@ -118,6 +140,7 @@ function github_post_repo($param = array()) {
 
 	return $github_repo;
 }
+
 
 function route_post_github_push($param = array()) {
 	$payload = json_decode($param['payload'], true);
@@ -187,6 +210,7 @@ function route_post_github_push($param = array()) {
 	return 'Success';
 }
 
+
 /**
  *	Create a repository on GitHub
  *	@param String $github_access_token see route_get_github_auth & route_get_github_auth_callback
@@ -206,6 +230,7 @@ function github_create_repo($github_access_token, $github_repo_name) {
 		return $response['result']['full_name'];
 	}
 }
+
 
 /**
  *	Add a collaborator to a repository on GitHub
@@ -227,6 +252,7 @@ function github_add_collaborator($github_access_token, $github_repo, $collaborat
 		return true;
 	}
 }
+
 
 /**
  *	Add the necessary webhooks for the Sausage Machine to function

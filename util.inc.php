@@ -1,5 +1,25 @@
 <?php
 
+/*
+	Portable utility functions for Sausage Machine
+	Partially taken from Hotglue
+	Copyright (C) 2010  Gottfried Haider, Danja Vasiliev
+	Copyright (C) 2015  Gottfried Haider for PublishingLab
+
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 /**
  *	Copy the content of a directory
  *	@param $src path to a file or directory
@@ -31,6 +51,7 @@ function cp_recursive($src, $dst) {
 	}
 }
 
+
 /**
  *	Return a file's extension
  *	@param string $fn file name
@@ -44,6 +65,7 @@ function filext($fn) {
 		return '';
 	}
 }
+
 
 /**
  *	Return a file's mime type
@@ -60,6 +82,7 @@ function get_mime($fn) {
 		return mime_content_type($fn);
 	}
 }
+
 
 function list_files_recursive($base_dir, $cur_dir = '') {
 	$dir = rtrim($base_dir, '/');
@@ -89,6 +112,7 @@ function list_files_recursive($base_dir, $cur_dir = '') {
 	return $ret;
 }
 
+
 /**
  *	Render a PHP view and return the output as a string
  *	@param string $fn filename
@@ -102,6 +126,7 @@ function render_php($fn, $data = array()) {
 	@ob_end_clean();
 	return $ret;
 }
+
 
 /**
  *	Delete a file or directory
