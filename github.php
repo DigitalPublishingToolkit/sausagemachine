@@ -240,6 +240,12 @@ function github_add_collaborator($github_access_token, $github_repo, $collaborat
 	$client->setAccessTokenType(OAuth2\Client::ACCESS_TOKEN_TOKEN);
 	$client->setCurlOption(CURLOPT_USERAGENT, config('github_useragent'));
 
+	// special case: repo owner and collaborator are the same
+	$pos = strpos($github_repo, '/');
+	if ($pos !== false && substr($github_repo, 0, $pos) === $collaborator) {
+		return true;
+	}
+
 	$response = $client->fetch('https://api.github.com/repos/' . $github_repo . '/collaborators/' . $collaborator, '', 'PUT');
 	if (!isset($response['code']) || $response['code'] !== 204) {
 		return false;
