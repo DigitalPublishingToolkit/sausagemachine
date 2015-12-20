@@ -164,3 +164,7 @@ select:not([multiple]) {
 .btn {
 	line-height: 13px;
 }
+
+#about p {
+	padding: 0 15px;
+}
