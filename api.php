@@ -294,10 +294,7 @@ function api_post_temp_files_update($param = array()) {
 		}
 
 		// recursively create directories if needed
-		$pos = strrpos($file['fn'], '/');
-		if ($pos !== false) {
-			@mkdir(tmp_dir($temp) . '/' . substr($file['fn'], 0, $pos), 0777, true);
-		}
+		create_containing_dir(tmp_dir($temp) . '/' . $file['fn']);
 
 		// save base64-encoded string as file
 		if (false !== @file_put_contents(tmp_dir($temp) . '/' . $file['fn'], @base64_decode($file['data']))) {
@@ -555,11 +552,7 @@ function api_post_temp_switch_repo($param = array()) {
 	$old_umask = @umask(0000);
 	foreach (repo_get_modified_files($temp) as $fn) {
 		// make sure the containing directories exist
-		// XXX: make this a function in util
-		$pos = strrpos($fn, '/');
-		if ($pos !== false) {
-			@mkdir(tmp_dir($staging) . '/' . substr($fn, 0, $pos), 0777, true);
-		}
+		create_containing_dir(tmp_dir($staging) . '/' . $fn);
 		// copy
 		@copy(tmp_dir($temp) . '/' . $fn, tmp_dir($staging) . '/' . $fn);
 	}

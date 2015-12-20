@@ -52,6 +52,22 @@ function cp_recursive($src, $dst) {
 }
 
 
+function create_containing_dir($fn) {
+	$pos = strrpos($fn, '/');
+	if ($pos === false) {
+		return true;
+	} else {
+		$dir = substr($fn, 0, $pos);
+	}
+
+	if (@is_dir($dir)) {
+		return true;
+	} else {
+		return @mkdir($dir, 0777, true);
+	}
+}
+
+
 /**
  *	Return a file's extension
  *	@param string $fn file name

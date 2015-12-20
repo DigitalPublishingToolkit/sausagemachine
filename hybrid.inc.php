@@ -88,11 +88,7 @@ function inject_uploaded_file($tmp_key, $file, $auto_convert = true) {
 	}
 
 	// make sure the containing directories exist
-	// XXX: make this a function in util
-	$pos = strrpos($dest_fn, '/');
-	if ($pos !== false) {
-		@mkdir(tmp_dir($tmp_key) . '/' . substr($dest_fn, 0, $pos), 0777, true);
-	}
+	create_containing_dir(tmp_dir($tmp_key) . '/' . $dest_fn);
 
 	// move to destination
 	if (false === @move_uploaded_file($file['tmp_name'], tmp_dir($tmp_key) . '/' . $dest_fn)) {
