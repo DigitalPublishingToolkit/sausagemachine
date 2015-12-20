@@ -74,3 +74,5 @@
 * Automatic re-basing of projects when the template gets updated
 
 * Capturing user email addresses, whether to subscribe to news, automatic rebasing after projct creation
+
+* Document Makefile guidelines (add "mrproper")
