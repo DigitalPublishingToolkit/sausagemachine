@@ -68,3 +68,9 @@
 * Support for bundling a static version of Pandoc?
 
 * The Sausage Machine needs a logo.
+
+* Fontend would benefit from some rework (w/ backbone.js)
+
+* Automatic re-basing of projects when the template gets updated
+
+* Capturing user email addresses, whether to subscribe to news, automatic rebasing after projct creation
