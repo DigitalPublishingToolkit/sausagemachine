@@ -599,7 +599,6 @@ function api_post_temp_push($param = array()) {
  *	@param $param['clean_after'] run "make clean" after determining the modified files (default: true)
  */
 function api_post_temp_switch_repo($param = array()) {
-	// XXX: test
 	$temp = $param[1];
 	if (!@is_dir(tmp_dir($temp))) {
 		router_error_404('Cannot get ' . $temp);
@@ -636,7 +635,7 @@ function api_post_temp_switch_repo($param = array()) {
 
 	// copy the modified files over
 	$old_umask = @umask(0000);
-	foreach (repo_get_modified_files() as $fn) {
+	foreach (repo_get_modified_files($temp) as $fn) {
 		// make sure the containing directories exist
 		// XXX: make this a function in util
 		$pos = strrpos($fn, '/');
