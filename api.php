@@ -487,8 +487,7 @@ function api_post_temp_commit($param = array()) {
 		router_error_500('Cannot commit to ' . $temp);
 	}
 
-	// XXX: return commit
-	return true;
+	return array('commit' => repo_get_current_commit(tmp_dir($temp)));
 }
 
 
