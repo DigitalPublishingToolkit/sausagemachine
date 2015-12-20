@@ -157,18 +157,13 @@ function github_post_push($param = array()) {
 		router_error_500('Error getting branch ' . $branch . ' of ' . $payload['repository']['clone_url']);
 	}
 
-	// XXX: implement make all in template
-	// XXX: make html removes book.epub
-	make_run(tmp_dir($tmp_key), 'html', $tmp);
-	$out = $tmp;
-	make_run(tmp_dir($tmp_key), 'book.epub', $tmp);
-	$out = array_merge($out, $tmp);
-	make_run(tmp_dir($tmp_key), 'icmls', $tmp);
-	$out = array_merge($out, $tmp);
+	$ret_val = make_run(tmp_dir($tmp_key), 'all', $out);
+	// run "make clean" to remove temporary files (but not output files, that's the idea)
+	make_run(tmp_dir($tmp_key), 'clean');
 
 	$modified = repo_get_modified_files($tmp_key);
-	if (empty($modified)) {
-		// nothing to commit
+	if (empty($modified) && $ret_val === 0) {
+		// nothing to commit, no error
 		return 'No changes';
 	}
 
