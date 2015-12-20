@@ -213,12 +213,40 @@
 			load_targets($.sausagemachine._get('repo'));
 		};
 
-		// start by requesting all template repositories
-		$.sausagemachine.get_repos(on_repos_loaded);
+		var load_temp = function(temp) {
+			$.sausagemachine.get_temp(temp, function(data) {
+				// success, update state
+				$.sausagemachine._set('temp', temp);
+				$.sausagemachine._set('repo', data.repo);
+			}, function() {
+				// error, most likely invalid temp
+				// continue with loading the repos
+				window.location.hash = '';
+				$.sausagemachine.get_repos(on_repos_loaded);
+			});
+		};
+
+		/* entry point */
+		var hash = window.location.hash.substring(1);
+		if (hash !== $.sausagemachine._get('temp')) {
+			// delete state
+			$.sausagemachine._clear();
+			if (hash.length) {
+				// set sessionStorage based on hash
+				load_temp(hash);
+			} else {
+				// no temp yet, load repos next
+				$.sausagemachine.get_repos(on_repos_loaded);
+			}
+		} else {
+			// sessionStorage is up to date, skip temp loading and continue with loading the repos
+			$.sausagemachine.get_repos(on_repos_loaded);
+		}
 
 		// enable the GitHub button if we have a temporary repository
 		if ($.sausagemachine._get('temp')) {
 			$('#btn-project').removeAttr('disabled');
+			$('#btn-convert').text('Update');
 		}
 
 		$('#repo-sel').on('change', function() {
@@ -254,7 +282,10 @@
 					repo: $.sausagemachine._get('repo')
 				}, function(temp) {
 					$.sausagemachine._set('temp', temp.temp);
+					// also update URL
+					window.location.hash = '#' + temp.temp;
 					$('#btn-project').removeAttr('disabled');
+					$('#btn-convert').text('Update');
 					convert();
 				});
 			} else {
@@ -369,21 +400,6 @@
 				});
 			}
 		});
-
-
-		/*
-
-		// the url has #temp, but optionally
-		var hash = window.location.hash.substring(1);
-		if (hash.length == 0 && $.sausagemachine._get('temp')) {
-			// set hash based on sessionStorage
-			window.location.hash = '#' + $.sausagemachine._get('temp');
-		} else if (hash !== $.sausagemachine._get('temp')) {
-			// set sessionStorage based on hash
-			$.sausagemachine._clear();
-			$.sausagemachine._set('temp', hash);
-		}
-		*/
 	</script>
 </body>
 </html>
