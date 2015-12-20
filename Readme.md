@@ -41,7 +41,11 @@
   
   set the configuration value `github_push_as` and `github_useragent` to your GitHub username
 
-* XXX: SSH
+* Using the browser, navigate to setup.php in the root folder of your installation.
+
+  Make sure all checks pass.
+
+* Copy the displayed SSH public key associated with your server, and [add it](https://github.com/settings/ssh) to the GitHub user associated with this installation. (configuration value `github_push_as`)
 
 
 ### Adding a template repository
