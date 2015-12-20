@@ -52,7 +52,7 @@
 
 			var on_files_uploaded = function(data) {
 				// redirect to edit
-				window.location = 'index.php?edit';
+				window.location = 'index.php?edit#' + $.sausagemachine._get('temp');
 			};
 
 			var upload_files = function() {
