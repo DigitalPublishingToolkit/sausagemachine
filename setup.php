@@ -3,7 +3,7 @@
 @require_once('config.inc.php');
 require_once('git.inc.php');
 
-header('Content-Type: text/plain');
+@header('Content-Type: text/plain');
 
 echo 'Checking SSH keypair... ';
 if (server_has_ssh_key()) {
