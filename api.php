@@ -181,8 +181,7 @@ function api_post_temp_create($param = array()) {
 		'temp' => $temp,
 		'repo' => repo_get_url($temp),
 		'branch' => 'master',
-		// XXX: implement
-		'commit' => '',
+		'commit' => repo_get_current_commit(tmp_dir($temp)),
 		'files' => repo_get_all_files(tmp_dir($temp))
 	);
 }
@@ -203,8 +202,7 @@ function api_get_temp($param = array()) {
 		'temp' => $temp,
 		'repo' => repo_get_url($temp),
 		'branch' => 'master',
-		// XXX: implement
-		'commit' => '',
+		'commit' => repo_get_current_commit(tmp_dir($temp)),
 		'files' => repo_get_all_files(tmp_dir($temp)),
 		'modified' => repo_get_modified_files($temp)
 	);

@@ -436,6 +436,24 @@ function repo_get_all_files($repo_dir) {
 
 
 /**
+ *	Return the current commit (hash)
+ *	@param $path path
+ *	@return String or false if not sucessful
+ */
+function repo_get_current_commit($path) {
+	$old_cwd = getcwd();
+	@chdir($path);
+	@exec('git rev-parse HEAD 2>&1', $out, $ret_val);
+	@chdir($old_cwd);
+	if ($ret_val !== 0) {
+		return false;
+	} else {
+		return trim($out[0]);
+	}
+}
+
+
+/**
  *	Return all modified files in the working directory of a Git repository that were last modified after a given timestamp
  *	@param $tmp_key tmp key
  *	@param $after timestamp
