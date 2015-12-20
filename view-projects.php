@@ -52,12 +52,13 @@
 		}
 
 		$(document).ready(function() {
-			if (sessionStorage.getItem('github_repo')) {
+			var hash = window.location.hash.substring(1);
+			if (hash.length) {
 				$('.flash').css('display', 'block');
-				$('#github-repo').attr('href', 'http://github.com/' + sessionStorage.getItem('github_repo'));
-				$('#github-repo').text(sessionStorage.getItem('github_repo'));
-				$('#github-repo-clone').attr('href', 'github-mac://openRepo/https://github.com/' + sessionStorage.getItem('github_repo'));
-				sessionStorage.removeItem('github_repo');
+				$('#github-repo').attr('href', 'http://github.com/' + hash);
+				$('#github-repo').text(hash);
+				// XXX (later): Windows?
+				$('#github-repo-clone').attr('href', 'github-mac://openRepo/https://github.com/' + hash);
 			}
 
 			$.sausagemachine.get_projects(function(data) {

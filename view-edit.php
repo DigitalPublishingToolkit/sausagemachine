@@ -398,11 +398,11 @@
 					error: function(jqXHR, textStatus, errorThrown) {
 						alert(jqXHR.responseText);
 					},
-					success: function(data, textStatus, xhr) {
-						$.sausagemachine._clear();
-						$.sausagemachine._set('github_repo', data);
-						//window.location = 'index.php?projects';
-						console.log(data);
+					success: function(data) {
+						if (data.length) {
+							$.sausagemachine._clear();
+							window.location = 'index.php?projects#' + data;
+						}
 					}
 				});
 			}
