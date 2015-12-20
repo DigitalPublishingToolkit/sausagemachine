@@ -26,7 +26,7 @@
 			<div class="four-fifths column">
 				<div class="flash" style="margin-bottom: 2em; display: none;">
 					Your book project got created as <a href="" id="github-repo" target="_blank"></a> on Github. We will automagically update various output formats for you whenever you push to this repository.<br><br>
-					<a id="github-repo-clone" href="">Click here</a> to clone the repository to your own computer. We recommend the application <a href="http://macdown.uranusjr.com/" target="_blank">MacDown</a> for editing the Markdown files.
+					<a id="github-repo-clone" href="">Click here</a> to clone the repository to your own computer. We recommend the application <a href="http://25.io/mou/" target="_blank">Mou</a> for editing Markdown files locally.
 				</div>
 				<div class="boxed-group">
 					<h3>Repositories</h3>
