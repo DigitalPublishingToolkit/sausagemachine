@@ -33,7 +33,7 @@
 
 * For GitHub integration, register a [new application](https://github.com/settings/applications/new) with GitHub:
 
-  point the *Authorization callback URL* to `github.php` in the current directory (e.g. `https://hpt.publishinglab.nl/github.php`, except on your own server)
+  point the *Authorization callback URL* to `github.php` in the current directory (e.g. `https://hpt.publishinglab.nl/github.php?push`, except on your own server)
 
   copy the *Client ID* that is displayed after creating the application and set it as the configuration value `github_client_id`
 

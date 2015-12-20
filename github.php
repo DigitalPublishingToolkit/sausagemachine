@@ -137,7 +137,7 @@ function github_post_repo($param = array()) {
 }
 
 
-function route_post_github_push($param = array()) {
+function github_post_push($param = array()) {
 	$payload = json_decode($param['payload'], true);
 
 	// prevent error on "ping" notifications
@@ -162,9 +162,9 @@ function route_post_github_push($param = array()) {
 	make_run(tmp_dir($tmp_key), 'html', $tmp);
 	$out = $tmp;
 	make_run(tmp_dir($tmp_key), 'book.epub', $tmp);
-	$out .= "\n\n" . $tmp;
+	$out = array_merge($out, $tmp);
 	make_run(tmp_dir($tmp_key), 'icmls', $tmp);
-	$out .= "\n\n" . $tmp;
+	$out = array_merge($out, $tmp);
 
 	$modified = repo_get_modified_files($tmp_key);
 	if (empty($modified)) {
@@ -274,7 +274,7 @@ function github_add_webhook($github_access_token, $github_repo) {
 			'push'
 		),
 		'config' => array(
-			'url' => base_url() . '?github.php?push',
+			'url' => base_url() . 'github.php?push',
 			'content_type' => 'form'
 		)
 	);
@@ -290,10 +290,11 @@ function github_add_webhook($github_access_token, $github_repo) {
 
 
 register_route('GET' , 'auth', 'github_get_auth');
+/* invoked by GitHub */
 register_route('GET' , 'auth_callback=?', 'github_get_auth_callback');
 register_route('POST', 'repo', 'github_post_repo');
 /* invoked by GitHub webhook */
-register_route('POST', 'repo', 'github_post_push');
+register_route('POST', 'push=?', 'github_post_push');
 
 
 $query = $_SERVER['QUERY_STRING'];
