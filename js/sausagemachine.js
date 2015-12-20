@@ -217,3 +217,21 @@ $.sausagemachine.switch_repo = function(temp, repo, success, error) {
 		dataType: 'json'
 	});
 };
+
+$.sausagemachine.get_projects = function(success, error) {
+	$.ajax({
+		url: 'api.php?projects',
+		error: function(jqXHR, textStatus, errorThrown) {
+			if (typeof error === 'function') {
+				error(jqXHR, textStatus, errorThrown);
+			} else {
+				console.error('Backend returned: ' + jqXHR.responseText);
+			}
+		},
+		method: 'get',
+		success: function(data) {
+			success(data);
+		},
+		dataType: 'json'
+	});
+};

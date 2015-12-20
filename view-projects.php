@@ -43,6 +43,7 @@
 		</div>
 	</div>
 	<script src="js/jquery-2.1.4.min.js"></script>
+	<script src="js/sausagemachine.js"></script>
 	<script>
 		var getCookie = function getCookie(name) {
 			var value = "; " + document.cookie;
@@ -59,31 +60,23 @@
 				sessionStorage.removeItem('github_repo');
 			}
 
-			$.ajax('json.php?projects', {
-				method: 'GET',
-				dataType: 'json',
-				success: function(data) {
+			$.sausagemachine.get_projects(function(data) {
+				// sort by "updated"
+				data.sort(function(a, b){
+					if(a.updated < b.updated) return 1;
+					if(a.updated > b.updated) return -1;
+					return 0;
+				});
 
-					// sort by "updated"
-					data.sort(function(a, b){
-						if(a.updated < b.updated) return 1;
-						if(a.updated > b.updated) return -1;
-						return 0;
-					});
-
-					$.each(data, function() {
-						var bar = $('.repo').first().clone();
-						bar.css('display', 'block');
-						bar.find('.repo-name a').attr('href', 'http://github.com/' + this.github_repo);
-						bar.find('.repo-name a').text(this.github_repo);
-						//var diff = Math.abs(new Date() - new Date(repository.updated*1000));
-						//var d = new Date(diff);
-						var d = new Date(this.updated*1000);
-						bar.find('.note').text('Last updated '+d);
-						//bar.find('.counter').text(repository.owner);
-						$('.repo').parent().append(bar);
-					});
-				}
+				$.each(data, function() {
+					var li = $('.repo').first().clone();
+					li.css('display', 'block');
+					li.find('.repo-name a').attr('href', 'http://github.com/' + this.github_repo);
+					li.find('.repo-name a').text(this.github_repo);
+					var d = new Date(this.updated*1000);
+					li.find('.note').text('Last updated '+d);
+					$('.repo').parent().append(li);
+				});
 			});
 		});
 	</script>
