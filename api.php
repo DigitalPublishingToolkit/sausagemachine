@@ -300,6 +300,10 @@ function api_post_temp_files_update($param = array()) {
 		}
 	}
 	@umask($old_umask);
+
+	// reset timer
+	repo_touch($temp);
+
 	return array('modified' => $modified);
 }
 
@@ -418,6 +422,9 @@ function api_post_temp_make($param = array()) {
 		make_run(tmp_dir($temp), 'clean');
 	}
 	$modified = repo_get_modified_files_after($temp, $start-1);
+
+	// reset timer
+	repo_touch($temp);
 
 	return array(
 		'target' => $target,

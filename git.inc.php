@@ -597,7 +597,10 @@ function repo_stage_files($tmp_key, $files = array()) {
 }
 
 
-// XXX: add to API
+/**
+ *	Prevent the repository from being automatically cleaned after a set time
+ *	@param $tmp_key tmp key
+ */
 function repo_touch($tmp_key) {
 	// update file modification time
 	@touch(tmp_dir($tmp_key));
