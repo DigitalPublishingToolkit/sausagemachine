@@ -50,7 +50,9 @@
 
 ### Adding a template repository
 
-* XXX
+* Create a publicly accessible repository
+
+* Add its clone URL and description to the `repos` configuration variable.
 
 
 ## Limitations / Next steps

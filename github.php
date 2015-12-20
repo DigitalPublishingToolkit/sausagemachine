@@ -302,5 +302,4 @@ if ($pos !== false) {
 }
 // return JSON by default
 @header('Content-type: application/json; charset=utf-8');
-// XXX: 400
 echo json_encode(route($_SERVER['REQUEST_METHOD'], $query));
