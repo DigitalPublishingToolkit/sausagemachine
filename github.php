@@ -268,8 +268,7 @@ function github_add_webhook($github_access_token, $github_repo) {
 			'push'
 		),
 		'config' => array(
-			// XXX: change
-			'url' => base_url() . '?github_push',
+			'url' => base_url() . '?github.php?push',
 			'content_type' => 'form'
 		)
 	);
@@ -287,6 +286,8 @@ function github_add_webhook($github_access_token, $github_repo) {
 register_route('GET' , 'auth', 'github_get_auth');
 register_route('GET' , 'auth_callback=?', 'github_get_auth_callback');
 register_route('POST', 'repo', 'github_post_repo');
+/* invoked by GitHub webhook */
+register_route('POST', 'repo', 'github_post_push');
 
 
 $query = $_SERVER['QUERY_STRING'];
