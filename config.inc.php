@@ -30,6 +30,7 @@ $config['github_push_as'] = 'CHANGEME';
 $config['github_useragent'] = 'CHANGEME';
 // blacklist of Makefile targets to hide from the web interface
 $config['ignore_targets'] = array(
+		'all',
 		'book.md',
 		'clean',
 		'folders',
