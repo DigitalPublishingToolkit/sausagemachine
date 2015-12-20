@@ -34,7 +34,7 @@
 						<li class="repo" style="display: none;">
 							<p class="repo-name css-truncate"><a href="#">Foo</a></p>
 							<p class="note">Last updated 20 minutes ago</p>
-							<span class="counter">1 contributors</span>
+							<span class="counter">1 collaborators</span>
 							<!-- icon, read ebook -->
 						</li>
 					</ul>
@@ -76,6 +76,10 @@
 					li.find('.repo-name a').text(this.github_repo);
 					var d = new Date(this.updated*1000);
 					li.find('.note').text('Last updated '+d);
+					if (!this.collaborators) {
+						this.collaborators = 1;
+					}
+					li.find('.counter').text(this.collaborators + ' collaborators');
 					$('.repo').parent().append(li);
 				});
 			});

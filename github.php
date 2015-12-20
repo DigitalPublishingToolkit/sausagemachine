@@ -187,6 +187,18 @@ function github_post_push($param = array()) {
 		router_error_500('Error pushing to ' . $payload['repository']['ssh_url']);
 	}
 
+	// count the number of collaborators
+	$seen = array();
+	foreach ($payload['commits'] as $commit) {
+		if (!in_array($commit['author']['email'], $seen)) {
+			$seen[] = $commit['author']['email'];
+		}
+	}
+	if (1 < $seen) {
+		// subtract the sausage machine
+		$seen--;
+	}
+
 	// XXX: move
 	$s = @file_get_contents(rtrim(config('content_dir', 'content'), '/') . '/projects.json');
 	$projects = @json_decode($s, true);
@@ -196,6 +208,7 @@ function github_post_push($param = array()) {
 	foreach ($projects as &$p) {
 		if ($payload['repository']['full_name'] === $p['github_repo']) {
 			$p['updated'] = time();
+			$p['collaborators'] = count($seen);
 		}
 	}
 	$old_umask = @umask(0000);
