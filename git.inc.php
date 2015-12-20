@@ -448,7 +448,7 @@ function repo_get_modified_files_after($tmp_key, $after) {
 	}
 
 	// check file modification times
-	$modfied_after = array();
+	$modified_after = array();
 	foreach ($modified as $fn) {
 		$mtime = @filemtime(tmp_dir($tmp_key) . '/' . $fn);
 		if ($mtime !== false && $after < $mtime) {
