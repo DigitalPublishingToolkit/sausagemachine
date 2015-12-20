@@ -158,6 +158,8 @@
 					$(this).addClass('file-selected');
 					if (!$(this).is('.file-new')) {
 						load_file($(this).text());
+					} else {
+						$('#markdown').val('');
 					}
 				});
 			};
@@ -333,10 +335,15 @@
 					$('#markdown').data('changed', null);
 				}
 			}
+			// special case for new files
+			if ($(this).is('.file-new')) {
+				$('#markdown').val('');
+			} else {
+				load_file($(this).text());
+			}
 			// switch selection
 			$('.file-selected').removeClass('file-selected');
 			$(this).addClass('file-selected');
-			load_file($(this).text());
 		});
 
 		// helper function, move
