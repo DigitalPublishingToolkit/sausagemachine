@@ -253,9 +253,22 @@ function api_get_temp_file($param = array()) {
 		);
 	} else if ($format === 'raw') {
 		// serve with proper MIME type
-		@header('Content-Type: ' . get_mime($path));
+		$mime = get_mime($path);
+		@header('Content-Type: ' . $mime);
 		@header('Content-Length: ' . @filesize($path));
-		@readfile($path);
+
+		// HACK: add a <base> element to the <head> of any HTML page passing through
+		// XXX (later): make this configurable via a $param
+		if ($mime !== 'text/html') {
+			@readfile($path);
+		} else {
+			$html = @file_get_contents($path);
+			// XXX (later): use mod_rewrite instead of linking to the content dir directly (api.php?... does not work)
+			$base = base_url() . tmp_dir($temp) . '/';
+			$html = str_replace('<head>', '<head>' . "\n" . '<base href="' . $base . '"></base>', $html);
+			echo $html;
+		}
+
 		die();
 	} else {
 		router_error_400('Unsupported format ' . $format);
