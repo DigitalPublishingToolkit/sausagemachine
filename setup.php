@@ -2,6 +2,7 @@
 
 @require_once('config.inc.php');
 require_once('git.inc.php');
+require_once('hybrid.inc.php');
 
 @header('Content-Type: text/plain');
 
