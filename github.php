@@ -3,24 +3,25 @@
 @require_once('config.inc.php');
 require_once('git.inc.php');
 require_once('makefile.inc.php');
+require_once('router.inc.php');
 require_once('vendor/OAuth2/Client.php');
 require_once('vendor/OAuth2/GrantType/IGrantType.php');
 require_once('vendor/OAuth2/GrantType/AuthorizationCode.php');
 
 // XXX: move
 function base_url() {
-	return 'http://sukzessiv.net/newage2/index.php';
+	return 'http://sukzessiv.net/newage2/';
 }
 
 /**
  *	Get the URL to redirect a client to in order to get a GitHub authentication token
  *	@return string
  */
-function route_get_github_auth($param = array()) {
+function github_get_auth($param = array()) {
 	$redirect_uri = base_url();
 	// add explicit route since GitHub prepends it with their own keys and values
-	$redirect_uri .= '?route=github_auth_callback';
-	// add custom parameter
+	$redirect_uri .= 'github.php?auth_callback';
+	unset($param[0]);
 	$redirect_uri .= '&' . http_build_query($param);
 
 	$client = new OAuth2\Client(config('github_client_id'), config('github_client_secret'));
@@ -31,7 +32,7 @@ function route_get_github_auth($param = array()) {
 /**
  *	Called by GitHub - set the access token as cookie and redirect to URL specified by client
  */
-function route_get_github_auth_callback($param = array()) {
+function github_get_auth_callback($param = array()) {
 	if (empty($param['code'])) {
 		// Required parameter code missing or empty
 		// see https://developer.github.com/v3/oauth/#web-application-flow
@@ -61,20 +62,20 @@ function route_get_github_auth_callback($param = array()) {
 /**
  *	Create a repository on GitHub and push a local (temporary) repository to it
  */
-function route_post_github_repo($param = array()) {
+function github_post_repo($param = array()) {
 	if (empty($param['github_access_token'])) {
 		router_error_400('Required parameter github_access_token missing or empty');
 	}
 	if (empty($param['github_repo_name'])) {
 		router_error_400('Required parameter github_repo_name missing or empty');
 	}
-	if (empty($param['tmp_key'])) {
-		router_error_400('Required parameter tmp_key missing or empty');
+	if (empty($param['temp'])) {
+		router_error_400('Required parameter temp missing or empty');
 	}
 
 	$github_repo = github_create_repo($param['github_access_token'], $param['github_repo_name']);
 	if ($github_repo === false) {
-		router_error_500('Error creating GitHub repository ' . $param['github_repo_name']);
+		router_error_500('Error creating GitHub repository ' . $param['github_repo_name'] . '. Make sure there is no existing repository with the same name.');
 	}
 
 	$ret = github_add_collaborator($param['github_access_token'], $github_repo, config('github_push_as'));
@@ -87,20 +88,20 @@ function route_post_github_repo($param = array()) {
 		router_error_500('Error adding webhook to ' . $github_repo);
 	}
 
-	$modified = repo_get_modified_files($param['tmp_key']);
-	$ret = repo_stage_files($param['tmp_key'], $modified);
+	$modified = repo_get_modified_files($param['temp']);
+	$ret = repo_stage_files($param['temp'], $modified);
 	if ($ret === false) {
-		router_error_500('Error staging files ' . implode(', ', $modified) . ' to ' . $param['tmp_key']);
+		router_error_500('Error staging files ' . implode(', ', $modified) . ' to ' . $param['temp']);
 	}
 
-	$ret = repo_commit($param['tmp_key'], 'Initial commit');
+	$ret = repo_commit($param['temp'], 'Initial commit');
 	if ($ret === false) {
-		router_error_500('Error committing ' . $param['tmp_key']);
+		router_error_500('Error committing ' . $param['temp']);
 	}
 
-	$ret = repo_push($param['tmp_key'], 'ssh://git@github.com/' . $github_repo . '.git');
+	$ret = repo_push($param['temp'], 'ssh://git@github.com/' . $github_repo . '.git');
 	if ($ret === false) {
-		router_error_500('Error pushing to ' . $github_repo);
+		router_error_500('Error pushing to ' . $github_repo . '. Make sure all checks in setup.php pass.');
 	}
 
 	// add to projects.json
@@ -110,7 +111,7 @@ function route_post_github_repo($param = array()) {
 	if (!@is_array($projects)) {
 		$projects = array();
 	}
-	$projects[] = array('created' => time(), 'updated' => time(), 'github_repo' => $github_repo, 'parent' => repo_get_url($param['tmp_key']));
+	$projects[] = array('created' => time(), 'updated' => time(), 'github_repo' => $github_repo, 'parent' => repo_get_url($param['temp']));
 	$old_umask = @umask(0000);
 	@file_put_contents(rtrim(config('content_dir', 'content'), '/') . '/projects.json', json_encode($projects));
 	@umask($old_umask);
@@ -259,3 +260,21 @@ function github_add_webhook($github_access_token, $github_repo) {
 		return true;
 	}
 }
+
+
+
+register_route('GET' , 'auth', 'github_get_auth');
+register_route('GET' , 'auth_callback=?', 'github_get_auth_callback');
+register_route('POST', 'repo', 'github_post_repo');
+
+
+$query = $_SERVER['QUERY_STRING'];
+// use the first URL argument for the router
+$pos = strpos($query, '&');
+if ($pos !== false) {
+	$query = substr($query, 0, $pos);
+}
+// return JSON by default
+@header('Content-type: application/json; charset=utf-8');
+// XXX: 400
+echo json_encode(route($_SERVER['REQUEST_METHOD'], $query));
