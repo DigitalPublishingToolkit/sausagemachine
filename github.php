@@ -22,15 +22,10 @@
 require_once('git.inc.php');
 require_once('makefile.inc.php');
 require_once('router.inc.php');
+require_once('util.inc.php');
 require_once('vendor/OAuth2/Client.php');
 require_once('vendor/OAuth2/GrantType/IGrantType.php');
 require_once('vendor/OAuth2/GrantType/AuthorizationCode.php');
-
-
-// XXX: move
-function base_url() {
-	return 'http://sukzessiv.net/newage2/';
-}
 
 
 /**

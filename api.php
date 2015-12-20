@@ -23,6 +23,7 @@ require_once('git.inc.php');
 require_once('hybrid.inc.php');
 require_once('makefile.inc.php');
 require_once('router.inc.php');
+require_once('util.inc.php');
 
 
 /**

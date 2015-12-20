@@ -21,6 +21,27 @@
 */
 
 /**
+ *	Get the base URL
+ *	@return String, including protocol and trailing slash
+ */
+function base_url() {
+	$base_url = '';
+	if (!empty($_SERVER['HTTPS'])) {
+		$base_url = 'https';
+	} else {
+		$base_url = 'http';
+	}
+	$base_url .= '://' . $_SERVER['HTTP_HOST'];
+	// XXX (later): handle custom port?
+	$pos = strrpos($_SERVER['PHP_SELF'], '/');
+	if ($pos !== false) {
+		$base_url .= substr($_SERVER['PHP_SELF'], 0, $pos);
+	}
+	$base_url .= '/';
+	return $base_url;
+}
+
+/**
  *	Copy the content of a directory
  *	@param $src path to a file or directory
  *	@param $dst path to a file or directory
