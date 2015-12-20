@@ -143,6 +143,9 @@ $.sausagemachine.update_temp_files = function(temp, files, success, error) {
 $.sausagemachine.make_temp = function(temp, target, success, error) {
 	$.ajax({
 		url: 'api.php?temps/make/' + temp + '/' + target,
+		data: {
+			clean_after: true
+		},
 		error: function(jqXHR, textStatus, errorThrown) {
 			if (typeof error === 'function') {
 				error(jqXHR, textStatus, errorThrown);
