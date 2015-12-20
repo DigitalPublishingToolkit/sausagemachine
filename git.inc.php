@@ -404,7 +404,7 @@ function repo_cleanup($tmp_key) {
 function repo_commit($tmp_key, $msg, $author = 'Git User <username@example.edu>') {
 	$old_cwd = getcwd();
 	@chdir(tmp_dir($tmp_key));
-	@exec('git commit -a --author=' . escapeshellarg($author) . ' -m ' . escapeshellarg($msg) . ' 2>&1', $out, $ret_val);
+	@exec('git commit -a --author=' . escapeshellarg($author) . ' -m ' . escapeshellarg($msg) . ' --allow-empty 2>&1', $out, $ret_val);
 	@chdir($old_cwd);
 	if ($ret_val !== 0) {
 		return false;
