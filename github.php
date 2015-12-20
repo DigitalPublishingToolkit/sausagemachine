@@ -231,7 +231,7 @@ function github_create_repo($github_access_token, $github_repo_name) {
 	$client->setAccessTokenType(OAuth2\Client::ACCESS_TOKEN_TOKEN);
 	$client->setCurlOption(CURLOPT_USERAGENT, config('github_useragent'));
 
-	$response = $client->fetch('https://api.github.com/user/repos', json_encode(array('name' => $github_repo_name)), 'POST');
+	$response = $client->fetch('https://api.github.com/user/repos', json_encode(array('name' => $github_repo_name, 'description' => 'Another hybrid book project managed by Sausage Machine')), 'POST');
 	if (!@is_string($response['result']['full_name'])) {
 		return false;
 	} else {
