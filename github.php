@@ -20,6 +20,7 @@
 
 @require_once('config.inc.php');
 require_once('git.inc.php');
+require_once('hybrid.inc.php');
 require_once('makefile.inc.php');
 require_once('router.inc.php');
 require_once('util.inc.php');
@@ -138,6 +139,7 @@ function github_post_repo($param = array()) {
 
 
 function github_post_push($param = array()) {
+	$commit_msg_prefix = 'Regenerate output files';
 	$payload = json_decode($param['payload'], true);
 
 	// prevent error on "ping" notifications
@@ -146,7 +148,7 @@ function github_post_push($param = array()) {
 	}
 
 	// prevent recursions
-	if ($payload['head_commit']['message'] === 'Regenerate output files') {
+	if (substr($payload['head_commit']['message'], 0, strlen($commit_msg_prefix)) === $commit_msg_prefix) {
 		return 'Not acting on my own changes';
 	}
 
@@ -172,7 +174,19 @@ function github_post_push($param = array()) {
 		router_error_500('Error staging files ' . implode(', ', $modified) . ' to ' . $tmp_key);
 	}
 
-	$ret = repo_commit($tmp_key, 'Regenerate output files');
+	// setup commit message
+	$msg = $commit_msg_prefix;		// this needs to come first
+	if ($ret_val !== 0) {
+		$msg .= ' (error)' . "\n\n";
+		$msg .= 'The process returned error code ' . $ret_val . '. ';
+	} else {
+		$msg .= "\n\n";
+	}
+	$msg .= 'The version of Pandoc used is ' . get_pandoc_version() . '.' . "\n\n";
+	$msg .= 'Output:' . "\n";
+	$msg .= implode("\n", $out);
+
+	$ret = repo_commit($tmp_key, $msg);
 	if ($ret === false) {
 		router_error_500('Error committing ' . $tmp_key);
 	}
