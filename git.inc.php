@@ -587,6 +587,62 @@ function repo_touch($tmp_key) {
 
 
 /**
+ *	Add a host to the webserver's known_hosts file
+ *	@param $host hostname
+ *	@param true if sucessful, false if not
+ */
+function server_add_known_host($host) {
+	@exec('ssh-keyscan -H github.com >> ~/.ssh/known_hosts', $out, $ret_val);
+	return ($ret_val === 0);
+}
+
+
+/**
+ *	Generate a SSH key pair in the context of the webserver process, overwrites existing files
+ *	@param $comment comment to add to the key
+ *	@return true if successful, false if not
+ */
+function server_create_ssh_key($comment = 'Created by Sausage Machine') {
+	@exec('echo -e "y\n" | ssh-keygen -q -t rsa -N ""  -C ' . escapeshellarg($comment) . ' -f ' . escapeshellarg($_SERVER['HOME'] . '/.ssh/id_rsa') . ' 2>&1', $out, $ret_val);
+	return ($ret_val === 0);
+}
+
+
+/**
+ *	Returns the SSH public key associated with the webserver process
+ *	@return String if sucessful, false if not
+ */
+function server_get_ssh_public_key() {
+	return @trim(file_get_contents($_SERVER['HOME'] . '/.ssh/id_rsa.pub'));
+}
+
+
+/**
+ *	Check if a host is in the webserver's known_hosts file
+ *	@param $host hostname
+ *	@return bool
+ */
+function server_has_known_host($host) {
+	@exec('ssh-keygen -f ' . escapeshellarg($_SERVER['HOME'] . '/.ssh/known_hosts') . ' -H -F ' . escapeshellarg($host), $out, $ret_val);
+	return (0 < count($out));
+}
+
+
+/**
+ *	Return whether the webserver process has a SSH keypair associated with it
+ *	@return bool
+ */
+function server_has_ssh_key() {
+	if (@is_file($_SERVER['HOME'] . '/.ssh/id_rsa') &&
+		@is_file($_SERVER['HOME'] . '/.ssh/id_rsa.pub')) {
+			return true;
+	} else {
+		return false;
+	}
+}
+
+
+/**
  *	Return the path for a tmp key
  *	@param $tmp_key tmp key
  *	@return string, without trailing slash
