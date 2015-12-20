@@ -61,6 +61,44 @@ function api_get_repo_files($param = array()) {
 
 
 /**
+ *	Get a file from a (template) repository
+ *	@param $param[1] (template) repository
+ *	@param $param['fn'] filename
+ */
+function api_get_repo_files_raw($param = array()) {
+	$repo = $param[1];
+
+	$cached = get_repo_for_reading($repo);
+	if ($cached === false) {
+		router_error_404('Cannot get ' . $repo);
+	}
+
+	if (empty($param['fn'])) {
+		router_error_400('Required parameter fn missing or empty');
+	} else {
+		$fn = $param['fn'];
+	}
+
+	if (strpos($fn, '../') !== false) {
+		// thwart possible attempts to get to files outside of the content directory
+		router_error_400('Illegal filename ' . $fn . ' for ' . $repo);
+	} else {
+		$path = cache_dir($cached) . '/' . $fn;
+	}
+
+	if (!@is_file($path)) {
+		router_error_400('Cannot get file ' . $fn . ' in ' . $repo);
+	}
+
+	// serve with proper MIME type
+	@header('Content-Type: ' . get_mime($path));
+	@header('Content-Length: ' . @filesize($path));
+	@readfile($path);
+	die();
+}
+
+
+/**
  *	Get a list of Makefile targets for a (template) repository
  *	@param $param[1] (template) repository
  */
@@ -759,6 +797,7 @@ function api_post_project_delete($param = array()) {
 
 
 register_route('GET' , 'repos', 'api_get_repos');
+register_route('GET' , 'repos/files/raw/(.+)', 'api_get_repo_files_raw');
 register_route('GET' , 'repos/files/(.+)', 'api_get_repo_files');
 register_route('GET' , 'repos/targets/(.+)', 'api_get_repo_targets');
 register_route('GET' , 'temps', 'api_get_temps');
