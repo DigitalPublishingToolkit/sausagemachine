@@ -12,7 +12,7 @@
 	<div class="container">
 		<div class="tabnav">
 			<nav class="tabnav-tabs">
-				<a href="index.php?import" class="tabnav-tab selected">Import file(s)</a>
+				<a href="index.php?import" id="import-link" class="tabnav-tab selected">Import file(s)</a>
 				<a href="index.php?edit" id="edit-link" class="tabnav-tab">Start a book</a>
 				<a href="index.php?projects" class="tabnav-tab">Book projects</a>
 				<a href="index.php?about" class="tabnav-tab">About</a>
@@ -73,7 +73,6 @@
 
 			if ($.sausagemachine._get('temp')) {
 				upload_files();
-				console.log('a');
 			} else {
 				$.sausagemachine.create_temp({}, on_temp_crated);
 			}
@@ -81,8 +80,10 @@
 		});
 
 		// make it possible to get back to edit without looking temp
-		if ($.sausagemachine._get('temp')) {
-			$('#edit-link').attr('href', $('#edit-link').attr('href') + '#' + $.sausagemachine._get('temp'));
+		var hash = window.location.hash.substring(1);
+		if (hash.length) {
+			$('#import-link').attr('href', $('#import-link').attr('href') + '#' + hash);
+			$('#edit-link').attr('href', $('#edit-link').attr('href') + '#' + hash);
 		}
 	</script>
 </body>

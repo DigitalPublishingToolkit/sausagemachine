@@ -12,8 +12,8 @@
 	<div class="container">
 		<div class="tabnav">
 			<nav class="tabnav-tabs">
-				<a href="index.php?import" class="tabnav-tab">Import file(s)</a>
-				<a href="index.php?edit" class="tabnav-tab selected">Start a book</a>
+				<a href="index.php?import" id="import-link" class="tabnav-tab">Import file(s)</a>
+				<a href="index.php?edit" id="edit-link" class="tabnav-tab selected">Start a book</a>
 				<a href="index.php?projects" class="tabnav-tab">Book projects</a>
 				<a href="index.php?about" class="tabnav-tab">About</a>
 			</nav>
@@ -230,6 +230,12 @@
 
 		/* entry point */
 		var hash = window.location.hash.substring(1);
+		if (hash.length) {
+			// update the tab links accordingly
+			// XXX (later): find a more elegant solution, also: but when he hash is invalid, and we save later
+			$('#import-link').attr('href', $('#import-link').attr('href') + '#' + hash);
+			$('#edit-link').attr('href', $('#edit-link').attr('href') + '#' + hash);
+		}
 		if (hash !== $.sausagemachine._get('temp')) {
 			// delete state
 			$.sausagemachine._clear();
@@ -286,6 +292,9 @@
 					$.sausagemachine._set('temp', temp.temp);
 					// also update URL
 					window.location.hash = '#' + temp.temp;
+					// update the tab links accordingly
+					$('#import-link').attr('href', $('#import-link').attr('href') + '#' + temp.temp);
+					$('#edit-link').attr('href', $('#edit-link').attr('href') + '#' + temp.temp);
 					$('#btn-project').removeAttr('disabled');
 					$('#btn-convert').text('Update');
 					convert();
