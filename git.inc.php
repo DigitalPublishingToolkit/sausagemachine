@@ -615,7 +615,7 @@ function repo_touch($tmp_key) {
  *	@param true if sucessful, false if not
  */
 function server_add_known_host($host) {
-	@exec('ssh-keyscan -H github.com >> ~/.ssh/known_hosts', $out, $ret_val);
+	@exec('ssh-keyscan -H github.com >> ' . escapeshellarg(get_server_home_dir() . '/.ssh/known_host')), $out, $ret_val);
 	return ($ret_val === 0);
 }
 
@@ -656,8 +656,8 @@ function server_has_known_host($host) {
  *	@return bool
  */
 function server_has_ssh_key() {
-	if (@is_file($_SERVER['HOME'] . '/.ssh/id_rsa') &&
-		@is_file($_SERVER['HOME'] . '/.ssh/id_rsa.pub')) {
+	if (@is_file(get_server_home_dir() . '/.ssh/id_rsa') &&
+		@is_file(get_server_home_dir() . '/.ssh/id_rsa.pub')) {
 			return true;
 	} else {
 		return false;
