@@ -57,7 +57,7 @@
 
 ## Limitations / Next steps
 
-* The historically grown [base template](https://github.com/DigitalPublishingToolkit/template-test) of the INC needs some improving.
+* The historically grown [base template](https://github.com/DigitalPublishingToolkit/template-test) of the INC needs some improving. (e.g. base path for files)
 
 * Currently the Makefiles are being executed in the regular context of the webserver process, which might be a security concern on shared hosts. It should be pretty straightforward to sandbox this, using chroot or containers.
 
