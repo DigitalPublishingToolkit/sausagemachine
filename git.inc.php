@@ -615,7 +615,8 @@ function repo_touch($tmp_key) {
  *	@param true if sucessful, false if not
  */
 function server_add_known_host($host) {
-	@exec('ssh-keyscan -H github.com >> ' . escapeshellarg(get_server_home_dir() . '/.ssh/known_host'), $out, $ret_val);
+	// see also http://serverfault.com/questions/132970/can-i-automatically-add-a-new-host-to-known-hosts/316100#316100
+	@exec('ssh-keyscan ' . $host . ',' . gethostbyname($host) . ' >> ' . escapeshellarg(get_server_home_dir() . '/.ssh/known_hosts'), $out, $ret_val);
 	return ($ret_val === 0);
 }
 
@@ -625,7 +626,7 @@ function server_add_known_host($host) {
  *	@param $comment comment to add to the key
  *	@return true if successful, false if not
  */
-function server_create_ssh_key($comment = 'Created by Sausage Machine') {
+function server_generate_ssh_key($comment = 'Created by Sausage Machine') {
 	@exec('echo -e "y\n" | ssh-keygen -q -t rsa -N ""  -C ' . escapeshellarg($comment) . ' -f ' . escapeshellarg(get_server_home_dir() . '/.ssh/id_rsa') . ' 2>&1', $out, $ret_val);
 	return ($ret_val === 0);
 }
