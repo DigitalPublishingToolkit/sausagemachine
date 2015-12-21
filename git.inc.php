@@ -615,7 +615,7 @@ function repo_touch($tmp_key) {
  *	@param true if sucessful, false if not
  */
 function server_add_known_host($host) {
-	@exec('ssh-keyscan -H github.com >> ' . escapeshellarg(get_server_home_dir() . '/.ssh/known_host')), $out, $ret_val);
+	@exec('ssh-keyscan -H github.com >> ' . escapeshellarg(get_server_home_dir() . '/.ssh/known_host'), $out, $ret_val);
 	return ($ret_val === 0);
 }
 
