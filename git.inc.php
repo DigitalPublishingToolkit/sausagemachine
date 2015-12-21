@@ -626,7 +626,7 @@ function server_add_known_host($host) {
  *	@return true if successful, false if not
  */
 function server_create_ssh_key($comment = 'Created by Sausage Machine') {
-	@exec('echo -e "y\n" | ssh-keygen -q -t rsa -N ""  -C ' . escapeshellarg($comment) . ' -f ' . escapeshellarg($_SERVER['HOME'] . '/.ssh/id_rsa') . ' 2>&1', $out, $ret_val);
+	@exec('echo -e "y\n" | ssh-keygen -q -t rsa -N ""  -C ' . escapeshellarg($comment) . ' -f ' . escapeshellarg(get_server_home_dir() . '/.ssh/id_rsa') . ' 2>&1', $out, $ret_val);
 	return ($ret_val === 0);
 }
 
@@ -636,7 +636,7 @@ function server_create_ssh_key($comment = 'Created by Sausage Machine') {
  *	@return String if sucessful, false if not
  */
 function server_get_ssh_public_key() {
-	return @trim(file_get_contents($_SERVER['HOME'] . '/.ssh/id_rsa.pub'));
+	return @trim(file_get_contents(get_server_home_dir() . '/.ssh/id_rsa.pub'));
 }
 
 
@@ -646,7 +646,7 @@ function server_get_ssh_public_key() {
  *	@return bool
  */
 function server_has_known_host($host) {
-	@exec('ssh-keygen -f ' . escapeshellarg($_SERVER['HOME'] . '/.ssh/known_hosts') . ' -H -F ' . escapeshellarg($host), $out, $ret_val);
+	@exec('ssh-keygen -f ' . escapeshellarg(get_server_home_dir() . '/.ssh/known_hosts') . ' -H -F ' . escapeshellarg($host), $out, $ret_val);
 	return (0 < count($out));
 }
 

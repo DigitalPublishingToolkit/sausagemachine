@@ -121,6 +121,16 @@ function get_mime($fn) {
 }
 
 
+function get_server_home_dir() {
+	if (!empty($_SERVER['HOME'] )) {
+		return $_SERVER['HOME'];
+	} else {
+		// doesn't seem to be set with apache2 & mod_php5
+		return posix_getpwuid(posix_getuid())['dir'];
+	}
+}
+
+
 function list_files_recursive($base_dir, $cur_dir = '') {
 	$dir = rtrim($base_dir, '/');
 	if (!empty($cur_dir)) {
