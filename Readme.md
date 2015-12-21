@@ -76,3 +76,9 @@
 * Capturing user email addresses, whether to subscribe to news, automatic rebasing after projct creation
 
 * Document Makefile guidelines (add "mrproper")
+
+* test other branches
+
+* do checkout w/ subprojects
+
+* add server side log
