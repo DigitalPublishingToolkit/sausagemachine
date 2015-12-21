@@ -19,7 +19,7 @@ $config['default_repo'] = 'https://github.com/DigitalPublishingToolkit/template-
 // default target selected on the web interface
 $config['default_target'] = 'html';
 // default view to display
-$config['default_route'] = 'import';
+$config['default_route'] = 'edit';
 // GitHub application "Client ID (to generate: https://github.com/settings/applications/new)
 $config['github_client_id'] = 'CHANGEME';
 // GitHub application "Client Secret" matching the "Client ID" above
