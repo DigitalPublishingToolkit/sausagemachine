@@ -180,11 +180,13 @@ function get_repo($url, $branch = 'master', $force_update = false) {
 	}
 
 	if ($branch === 'master') {
-		// XXX: test & document why
+		// XXX (later): revisit & document - IIRC the reason for this was that
+		// same of the permissions were off after a regular copy (w/ umask) and
+		// that running the git command somehow fix them?
 		$ret = repo_cleanup($tmp_key);
 	} else {
 		$ret = repo_checkout_branch($tmp_key, $branch);
-		// XXX: also needs repo_cleanup()?
+		// XXX (later): revisit - does this also need repo_cleanup()?
 	}
 
 	@umask($old_umask);

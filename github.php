@@ -123,7 +123,7 @@ function github_post_repo($param = array()) {
 	}
 
 	// add to projects.json
-	// XXX: turn into a function, make atomic
+	// XXX (later): create helper functions, make atomic
 	$s = @file_get_contents(rtrim(config('content_dir', 'content'), '/') . '/projects.json');
 	$projects = @json_decode($s, true);
 	if (!@is_array($projects)) {
@@ -208,7 +208,7 @@ function github_post_push($param = array()) {
 		$seen--;
 	}
 
-	// XXX: move
+	// XXX (later): create helper functions, make atomic
 	$s = @file_get_contents(rtrim(config('content_dir', 'content'), '/') . '/projects.json');
 	$projects = @json_decode($s, true);
 	if (!@is_array($projects)) {

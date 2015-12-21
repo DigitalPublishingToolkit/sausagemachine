@@ -484,11 +484,7 @@ function api_post_temp_commit($param = array()) {
 	} else {
 		$message = 'Add initial files';
 	}
-	if (@is_string($param['author'])) {
-		$author = $param['author'];
-	} else {
-		// XXX: default
-	}
+	// XXX (later): add author parameter
 
 	// add files to repository
 	if (false === repo_stage_files($temp, $files)) {
@@ -496,7 +492,6 @@ function api_post_temp_commit($param = array()) {
 	}
 
 	// commit
-	// XXX: , $author
 	if (false === repo_commit($temp, $message)) {
 		router_error_500('Cannot commit to ' . $temp);
 	}
@@ -669,7 +664,7 @@ function api_post_project_create($param = array()) {
 	$project->updated = time();
 
 	// save
-	// XXX: make atomic
+	// XXX (later): create helper functions, make atomic
 	$str = @json_encode($json);
 	$old_umask = @umask(0000);
 	if (false === file_put_contents(rtrim(config('content_dir', 'content'), '/') . '/projects.json', $str)) {
