@@ -168,3 +168,9 @@ select:not([multiple]) {
 #about p {
 	padding: 0 15px;
 }
+
+#logo {
+	width: 100%;
+	margin-top: 20px;
+	opacity: 0.4;
+}

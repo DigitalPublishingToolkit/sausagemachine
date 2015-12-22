@@ -20,7 +20,7 @@
 		</div>
 		<div class="columns">
 			<div class="one-fifth column">
-				&nbsp;
+				<img id="logo" src="img/logo.svg" alt="Logo" title="Logo by Jess van Zyl">
 			</div>
 			<div class="four-fifths column">
 				<div id="about" class="boxed-group">
