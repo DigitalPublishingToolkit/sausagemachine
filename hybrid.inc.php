@@ -28,7 +28,11 @@ require_once('util.inc.php');
  *	@return string or false if not available
  */
 function get_pandoc_version() {
-	@exec('pandoc -v', $out, $ret_val);
+	// fix "pandoc: HOME: getAppUserDataDirectory: does not exist (no environment variable)" on webservers
+	// that don't have $_SERVER['HOME'] set
+	// see also https://github.com/jgm/pandoc-citeproc/issues/35
+	// not sure if this is also needed for regular "make" invocations
+	@exec('HOME=' . escapeshellarg(get_server_home_dir()) . ' pandoc -v 2>&1', $out, $ret_val);
 	if ($ret_val !== 0) {
 		return false;
 	} else {
