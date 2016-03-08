@@ -39,3 +39,5 @@
 * The [api.md](api.md) is sightly outdated.
 
 * If a Makefile has no targets, ignore_targets should be relaxed.
+
+* The list of existing projects should be automatically cleaned out periodically (i.e. the repositories that since got removed from Github deleted).
