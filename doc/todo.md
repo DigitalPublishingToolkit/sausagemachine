@@ -2,7 +2,7 @@
 
 * The historically grown [base template](https://github.com/DigitalPublishingToolkit/template-test) used by the INC should be revisited.
 
-  e.g. a common base path for (relatively specified) image files, across output and editing formats
+  e.g. a common base path for (relatively specified) image files, across output and editing formats (see [Automatic Variables](https://www.gnu.org/software/make/manual/html_node/Automatic-Variables.html])
 
 * The Makefiles are currently being executed in the regular context of the webserver process, which might be a security concern on shared hosts. It should be pretty straightforward to sandbox this, using chroot or containers.
 
