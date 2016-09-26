@@ -51,6 +51,10 @@ $config['repos'] = array(
 		array (
 			'repo' => 'https://github.com/template01/template01-template-test.git',
 			'description' => 'template01'
+		),
+		array (
+			'repo' => 'https://github.com/dyl3an/HvA-Open-Publishing.git',
+			'description' => 'HvA Open Publishing'
 		)
 	);
 // readable titles for various Makefile targets
