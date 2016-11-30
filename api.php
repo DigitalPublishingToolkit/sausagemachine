@@ -25,7 +25,6 @@ require_once('makefile.inc.php');
 require_once('router.inc.php');
 require_once('util.inc.php');
 
-
 /**
  *	Get a list of (template) repositories
  */
@@ -609,6 +608,40 @@ function api_post_temp_delete($param = array()) {
 
 
 /**
+ *	Check project life
+ */
+function api_check_project($json = array()) {
+	foreach ($json as &$project) {
+		if (is_object($project)) {
+			if(isset($project->parent)){
+				debug_to_console( $project->parent );
+			}
+		}
+	}
+	return $json;
+}
+
+function checkUrl($url) {
+    // Simple check
+    if (!$url) { return FALSE; }
+    // Create cURL resource using the URL string passed in
+    $curl_resource = curl_init($url);
+    // Set cURL option and execute the "query"
+    curl_setopt($curl_resource, CURLOPT_RETURNTRANSFER, true);
+    curl_exec($curl_resource);
+    // Check for the 404 code (page must have a header that correctly display 404 error code according to HTML standards
+    if( in_array(curl_getinfo($curl_resource, CURLINFO_HTTP_CODE), array(301, 302, 404) ) ) {
+        // Code matches, close resource and return false
+        curl_close($curl_resource);
+        return FALSE;
+    } else {
+        // No matches, close resource and return true
+        curl_close($curl_resource);
+        return TRUE;
+    }
+}
+
+/**
  *	Get a list of projects registered with the system
  */
 function api_get_projects($param = array()) {
@@ -617,6 +650,16 @@ function api_get_projects($param = array()) {
 	if (!is_array($json)) {
 		return array();
 	} else {
+		$len = count($json);
+		for ($i=$len; $i>=1; $i--){
+			$project = $json[$i-1];
+			if( isset($project->github_repo) ) {
+				$url = "https://github.com/" . $project->github_repo;
+				if(checkUrl($url) == false) {
+					array_splice($json, $i-1, 1);
+				}
+			}
+		}
 		// XXX (later): filter email addresses etc, also add .htacess rule to prevent direct access
 		return $json;
 	}
