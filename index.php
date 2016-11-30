@@ -22,8 +22,8 @@
 require_once('router.inc.php');
 require_once('util.inc.php');
 
-
-$query = $_SERVER['QUERY_STRING'];
+// Start at the first tab if 'QUERY_STRING' is not set
+$query = isset($_SERVER['QUERY_STRING']) ? $_SERVER['QUERY_STRING'] : 'import';
 // use the first URL argument for the router
 $pos = strpos($query, '&');
 if ($pos !== false) {
