@@ -1,3 +1,7 @@
+html {
+  overflow-y: scroll; /* Scrollbar should not move page */
+}
+
 .tabnav {
 	margin-bottom: 30px;
 }

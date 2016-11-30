@@ -136,6 +136,7 @@ function api_get_repo_targets($param = array()) {
 }
 
 
+
 /**
  *	Get a list of temporary (working) repositories
  */
@@ -640,11 +641,8 @@ function checkUrl($url) {
         return TRUE;
     }
 }
-
-/**
- *	Get a list of projects registered with the system
- */
-function api_get_projects($param = array()) {
+ 
+ function api_get_clean_projects($param = array()) {
 	$str = @file_get_contents(rtrim(config('content_dir', 'content'), '/') . '/projects.json');
 	$json = @json_decode($str);
 	if (!is_array($json)) {
@@ -660,6 +658,30 @@ function api_get_projects($param = array()) {
 				}
 			}
 		}
+		
+		// save
+        // XXX (later): create helper functions, make atomic
+        $str = @json_encode($json);
+        $old_umask = @umask(0000);
+        if (false === file_put_contents(rtrim(config('content_dir', 'content'), '/') . '/projects.json', $str)) {
+            @umask($old_umask);
+            router_error_500('Cannot save projects.json');
+        }
+        @umask($old_umask);
+        
+		return $json;
+	}
+}
+
+/**
+ *	Get a list of projects registered with the system
+ */
+function api_get_projects($param = array()) {
+	$str = @file_get_contents(rtrim(config('content_dir', 'content'), '/') . '/projects.json');
+	$json = @json_decode($str);
+	if (!is_array($json)) {
+		return array();
+	} else {
 		// XXX (later): filter email addresses etc, also add .htacess rule to prevent direct access
 		return $json;
 	}
@@ -779,6 +801,7 @@ register_route('POST', 'temps/push/([0-9]+)', 'api_post_temp_push');
 register_route('POST', 'temps/switch_repo/([0-9]+)', 'api_post_temp_switch_repo');
 register_route('POST', 'temps/delete/([0-9]+)', 'api_post_temp_delete');
 register_route('GET' , 'projects', 'api_get_projects');
+register_route('GET' , 'clean_projects', 'api_get_clean_projects');
 register_route('POST', 'projects/create/(.+)', 'api_post_project_create');
 register_route('POST', 'projects/update/(.+)', 'api_post_project_create');
 register_route('POST', 'projects/delete/(.+)', 'api_post_project_delete');

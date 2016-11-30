@@ -221,6 +221,24 @@ $.sausagemachine.switch_repo = function(temp, repo, success, error) {
 	});
 };
 
+$.sausagemachine.get_clean_projects = function(success, error) {
+	$.ajax({
+		url: 'api.php?clean_projects',
+		error: function(jqXHR, textStatus, errorThrown) {
+			if (typeof error === 'function') {
+				error(jqXHR, textStatus, errorThrown);
+			} else {
+				console.error('Backend returned: ' + jqXHR.responseText);
+			}
+		},
+		method: 'get',
+		success: function(data) {
+			success(data);
+		},
+		dataType: 'json'
+	});
+};
+
 $.sausagemachine.get_projects = function(success, error) {
 	$.ajax({
 		url: 'api.php?projects',

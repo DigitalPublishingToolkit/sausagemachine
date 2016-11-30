@@ -14,14 +14,17 @@
 			<nav class="tabnav-tabs">
 				<a href="index.php?import" class="tabnav-tab">Import file(s)</a>
 				<a href="index.php?edit" class="tabnav-tab">Start a book</a>
-				<a href="index.php?projects" class="tabnav-tab selected">Book projects</a>
+				<a href="index.php?projects" class="tabnav-tab selected">Archive</a>
 				<a href="index.php?about" class="tabnav-tab">About</a>
 			</nav>
 		</div>
 		<div class="columns">
 			<div class="one-fifth column" style="position: relative;">
+			    <!-- This errors when run on local host 
 				<div style="width: 100%; height: 100%; background-color: white; position: absolute; z-index: 1;" onmouseover="this.style.visibility='hidden'; var that = this; setTimeout(function() { that.style.visibility='visible'; }, 1000);"></div>
 				<iframe src="https://www.youtube.com/embed/oyXHA7xiChc?start=20" frameborder="0" style="width: 100%;"></iframe>
+				-->
+				<button type="button" id="btn-clean" class="btn">Clean Archive</button>
 			</div>
 			<div class="four-fifths column">
 				<div class="flash" style="margin-bottom: 2em; display: none;">
@@ -83,6 +86,31 @@
 					$('.repo').parent().append(li);
 				});
 			});
+			
+			$('#btn-clean').on('click', function() {
+                $.sausagemachine.get_clean_projects(function(data) {
+                    // sort by "updated"
+                    data.sort(function(a, b){
+                        if(a.updated < b.updated) return 1;
+                        if(a.updated > b.updated) return -1;
+                        return 0;
+                    });
+
+                    $.each(data, function() {
+                        var li = $('.repo').first().clone();
+                        li.css('display', 'block');
+                        li.find('.repo-name a').attr('href', 'http://github.com/' + this.github_repo);
+                        li.find('.repo-name a').text(this.github_repo);
+                        var d = new Date(this.updated*1000);
+                        li.find('.note').text('Last updated '+d);
+                        if (!this.collaborators) {
+                            this.collaborators = 1;
+                        }
+                        li.find('.counter').text(this.collaborators + ' collaborators');
+                        $('.repo').parent().append(li);
+                    });
+                });
+            });
 		});
 	</script>
 </body>
