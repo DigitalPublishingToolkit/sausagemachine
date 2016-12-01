@@ -96,6 +96,9 @@
                         return 0;
                     });
 
+                    // Clear list
+                    $('.repo').not('li:first').remove();
+
                     $.each(data, function() {
                         var li = $('.repo').first().clone();
                         li.css('display', 'block');

@@ -662,12 +662,9 @@ function checkUrl($url) {
 		// save
         // XXX (later): create helper functions, make atomic
         $str = @json_encode($json);
-        $old_umask = @umask(0000);
         if (false === file_put_contents(rtrim(config('content_dir', 'content'), '/') . '/projects.json', $str)) {
-            @umask($old_umask);
             router_error_500('Cannot save projects.json');
         }
-        @umask($old_umask);
         
 		return $json;
 	}
