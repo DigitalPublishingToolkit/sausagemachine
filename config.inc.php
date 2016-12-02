@@ -49,8 +49,8 @@ $config['repos'] = array(
 			'description' => 'PublishingLab default'
 		),
 		array (
-			'repo' => 'https://github.com/template01/template01-template-test.git',
-			'description' => 'template01'
+			'repo' => 'https://github.com/template01/template01-does-not-exist-test.git',
+			'description' => 'template01 (Non existing)'
 		),
 		array (
 			'repo' => 'https://github.com/dyl3an/HvA-Open-Publishing.git',

@@ -30,10 +30,17 @@ require_once('util.inc.php');
  */
 function api_get_repos($param = array()) {
 	$repos = config('repos', array());
-	foreach ($repos as &$repo) {
-		// mark the default repo
-		if ($repo['repo'] === config('default_repo')) {
-			$repo['default'] = true;
+	$len = count($repos);
+	for ($i=$len; $i>=1; $i--){
+		$repo = $repos[$i-1];		
+		if(checkUrl(preg_replace('/\\.git$/', '', $repo['repo'])) == false) {
+			array_splice($repos, $i-1, 1);
+		} else {
+			if ($repo['repo'] === config('default_repo')) {
+				$repo['default'] = true;
+			} else {
+				$repo['default'] = false;
+			}
 		}
 	}
 	return $repos;
@@ -641,8 +648,8 @@ function checkUrl($url) {
         return TRUE;
     }
 }
- 
- function api_get_clean_projects($param = array()) {
+
+function api_get_clean_projects($param = array()) {
 	$str = @file_get_contents(rtrim(config('content_dir', 'content'), '/') . '/projects.json');
 	$json = @json_decode($str);
 	if (!is_array($json)) {
