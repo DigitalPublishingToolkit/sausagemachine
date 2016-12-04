@@ -11,6 +11,7 @@ $config = array();
 
 // enable error reporting (useful for development)
 error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 // path to store content, must be writable for the webserver process
 $config['content_dir'] = 'content';

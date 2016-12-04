@@ -45,7 +45,11 @@ $.sausagemachine.get_repos = function(success, error) {
 	});
 };
 
-$.sausagemachine.get_repo_files = function(repo, success, error) {
+$.sausagemachine.get_repo_files = function(repo, success, error) {   
+    if(typeof repo === "undefined") {
+        console.log('sausagemachine.get_repo_files: repo is undefined');
+        return;
+    }
 	$.ajax({
 		url: 'api.php?repos/files/' + repo,
 		error: function(jqXHR, textStatus, errorThrown) {
@@ -82,6 +86,10 @@ $.sausagemachine.get_temp_files = function(temp, success, error) {
 };
 
 $.sausagemachine.get_targets = function(repo, success, error) {
+    if(typeof repo === "undefined") {
+        console.log('sausagemachine.get_targets: repo is undefined');
+        return;
+    }
 	$.ajax({
 		url: 'api.php?repos/targets/' + repo,
 		error: function(jqXHR, textStatus, errorThrown) {
