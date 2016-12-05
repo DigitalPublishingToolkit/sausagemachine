@@ -46,6 +46,24 @@
 			</div>
 		</div>
 	</div>
+	
+	<!-- Start Activity Indicator -->
+	<div id="activityIndicator">
+		<div class="annimation"><img src="img/ring-alt.svg"></div>
+		<div class="text">
+			<h3 class="header">Loading</h2>
+			<p class="details">. . .</p>
+			<p class="cancel"><a href="#">Cancel</a></p>
+		</div>
+	</div>
+	<script>
+		$('#activityIndicator .cancel a').on('click', function(){
+			$('#activityIndicator').fadeOut();
+			return false;
+		});
+	</script>
+	<!-- End Activity Indicator -->
+	
 	<script src="js/jquery-2.1.4.min.js"></script>
 	<script src="js/sausagemachine.js"></script>
 	<script>

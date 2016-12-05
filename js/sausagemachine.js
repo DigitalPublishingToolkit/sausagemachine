@@ -27,18 +27,36 @@ $.sausagemachine._set = function(key, val) {
 	sessionStorage.setItem('state', JSON.stringify(data));
 };
 
+$.sausagemachine.show_activityIndicator = function( details, header = "Loading" ) {
+	$("#activityIndicator .header").html( String(header) );
+	$("#activityIndicator .details").html( String(details) );
+	if(String(header) == "Error") {
+		$("#activityIndicator .cancel").css('display', 'block');
+	} else {
+		$("#activityIndicator .cancel").css('display', 'none');
+	}
+	$('#activityIndicator').fadeIn();
+}
+
+$.sausagemachine.hide_activityIndicator = function( ) {
+	$('#activityIndicator').fadeOut();
+}
+
 $.sausagemachine.get_repos = function(success, error) {
+	$.sausagemachine.show_activityIndicator("Searching for templates...");
 	$.ajax({
 		url: 'api.php?repos',
 		error: function(jqXHR, textStatus, errorThrown) {
 			if (typeof error === 'function') {
 				error(jqXHR, textStatus, errorThrown);
 			} else {
+				$.sausagemachine.show_activityIndicator(jqXHR.responseText, "Error");
 				console.error('Backend returned: ' + jqXHR.responseText);
 			}
 		},
 		method: 'get',
 		success: function(data) {
+			$.sausagemachine.hide_activityIndicator();
 			success(data);
 		},
 		dataType: 'json'
@@ -50,17 +68,20 @@ $.sausagemachine.get_repo_files = function(repo, success, error) {
         console.log('sausagemachine.get_repo_files: repo is undefined');
         return;
     }
+    $.sausagemachine.show_activityIndicator("Getting template files...");
 	$.ajax({
 		url: 'api.php?repos/files/' + repo,
 		error: function(jqXHR, textStatus, errorThrown) {
 			if (typeof error === 'function') {
 				error(jqXHR, textStatus, errorThrown);
 			} else {
+				$.sausagemachine.show_activityIndicator(jqXHR.responseText, "Error");
 				console.error('Backend returned: ' + jqXHR.responseText);
 			}
 		},
 		method: 'get',
 		success: function(data) {
+			$.sausagemachine.hide_activityIndicator();
 			success(data.files);
 		},
 		dataType: 'json'
