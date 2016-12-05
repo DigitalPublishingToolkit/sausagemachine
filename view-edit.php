@@ -14,7 +14,7 @@
 			<nav class="tabnav-tabs">
 				<a href="index.php?import" id="import-link" class="tabnav-tab">Import file(s)</a>
 				<a href="index.php?edit" id="edit-link" class="tabnav-tab selected">Start a book</a>
-				<a href="index.php?projects" class="tabnav-tab">Book projects</a>
+				<a href="index.php?projects" class="tabnav-tab">Archive</a>
 				<a href="index.php?about" class="tabnav-tab">About</a>
 			</nav>
 		</div>
@@ -46,6 +46,24 @@
 			</div>
 		</div>
 	</div>
+	
+	<!-- Start Activity Indicator -->
+	<div id="activityIndicator">
+		<div class="annimation"><img src="img/ring-alt.svg"></div>
+		<div class="text">
+			<h3 class="header">Loading</h2>
+			<p class="details">. . .</p>
+			<p class="cancel"><a href="#">Cancel</a></p>
+		</div>
+	</div>
+	<script>
+		$('#activityIndicator .cancel a').on('click', function(){
+			$('#activityIndicator').fadeOut();
+			return false;
+		});
+	</script>
+	<!-- End Activity Indicator -->
+	
 	<script src="js/jquery-2.1.4.min.js"></script>
 	<script src="js/sausagemachine.js"></script>
 	<script>

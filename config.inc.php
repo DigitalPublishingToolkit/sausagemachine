@@ -11,6 +11,7 @@ $config = array();
 
 // enable error reporting (useful for development)
 error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 // path to store content, must be writable for the webserver process
 $config['content_dir'] = 'content';
@@ -49,8 +50,8 @@ $config['repos'] = array(
 			'description' => 'PublishingLab default'
 		),
 		array (
-			'repo' => 'https://github.com/template01/template01-template-test.git',
-			'description' => 'template01'
+			'repo' => 'https://github.com/template01/template01-does-not-exist-test.git',
+			'description' => 'template01 (Non existing)'
 		),
 		array (
 			'repo' => 'https://github.com/dyl3an/HvA-Open-Publishing.git',

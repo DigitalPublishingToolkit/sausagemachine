@@ -18,6 +18,11 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+session_start();
+if( !isset($_SESSION['repos_cleaned']) ) {
+    $_SESSION['repos_cleaned']=false;
+}
+
 @require_once('config.inc.php');
 require_once('git.inc.php');
 require_once('hybrid.inc.php');
@@ -25,21 +30,36 @@ require_once('makefile.inc.php');
 require_once('router.inc.php');
 require_once('util.inc.php');
 
+function api_clean_repos($repos){
+    $len = count($repos);
+	for ($i=$len; $i>=1; $i--){
+		$repo = $repos[$i-1];
+		if(checkUrl(preg_replace('/\\.git$/', '', $repo['repo'])) == false) {
+			array_splice($repos, $i-1, 1);
+		} else {
+			if ($repo['repo'] === config('default_repo')) {
+				$repo['default'] = true;
+			} else {
+				$repo['default'] = false;
+			}
+		}
+	}
+	$_SESSION['repos_cleaned']=true;
+	$_SESSION['repos']=$repos;
+    return $repos;
+}
 
 /**
  *	Get a list of (template) repositories
  */
 function api_get_repos($param = array()) {
-	$repos = config('repos', array());
-	foreach ($repos as &$repo) {
-		// mark the default repo
-		if ($repo['repo'] === config('default_repo')) {
-			$repo['default'] = true;
-		}
-	}
-	return $repos;
+    $repos = config('repos', array());
+    // Clean repos only once per session
+    if( isset($_SESSION['repos_cleaned']) && isset($_SESSION['repos']) ) {
+        return $_SESSION['repos'];
+    }
+    return api_clean_repos($repos);
 }
-
 
 /**
  *	Get a list of all files in a (template) repository
@@ -135,6 +155,7 @@ function api_get_repo_targets($param = array()) {
 	}
 	return $ret;
 }
+
 
 
 /**
@@ -607,6 +628,53 @@ function api_post_temp_delete($param = array()) {
 	return true;
 }
 
+function checkUrl($url) {
+    // Simple check
+    if (!$url) { return FALSE; }
+    // Create cURL resource using the URL string passed in
+    $curl_resource = curl_init($url);
+    // Set cURL option and execute the "query"
+    curl_setopt($curl_resource, CURLOPT_RETURNTRANSFER, true);
+    curl_exec($curl_resource);
+    // Check for the 404 code (page must have a header that correctly display 404 error code according to HTML standards
+    if( in_array(curl_getinfo($curl_resource, CURLINFO_HTTP_CODE), array(301, 302, 404) ) ) {
+        // Code matches, close resource and return false
+        curl_close($curl_resource);
+        return FALSE;
+    } else {
+        // No matches, close resource and return true
+        curl_close($curl_resource);
+        return TRUE;
+    }
+}
+
+function api_get_clean_projects($param = array()) {
+	$str = @file_get_contents(rtrim(config('content_dir', 'content'), '/') . '/projects.json');
+	$json = @json_decode($str);
+	if (!is_array($json)) {
+		return array();
+	} else {
+		$len = count($json);
+		for ($i=$len; $i>=1; $i--){
+			$project = $json[$i-1];
+			if( isset($project->github_repo) ) {
+				$url = "https://github.com/" . $project->github_repo;
+				if(checkUrl($url) == false) {
+					array_splice($json, $i-1, 1);
+				}
+			}
+		}
+		
+		// save
+        // XXX (later): create helper functions, make atomic
+        $str = @json_encode($json);
+        if (false === file_put_contents(rtrim(config('content_dir', 'content'), '/') . '/projects.json', $str)) {
+            router_error_500('Cannot save projects.json');
+        }
+        
+		return $json;
+	}
+}
 
 /**
  *	Get a list of projects registered with the system
@@ -736,6 +804,7 @@ register_route('POST', 'temps/push/([0-9]+)', 'api_post_temp_push');
 register_route('POST', 'temps/switch_repo/([0-9]+)', 'api_post_temp_switch_repo');
 register_route('POST', 'temps/delete/([0-9]+)', 'api_post_temp_delete');
 register_route('GET' , 'projects', 'api_get_projects');
+register_route('GET' , 'clean_projects', 'api_get_clean_projects');
 register_route('POST', 'projects/create/(.+)', 'api_post_project_create');
 register_route('POST', 'projects/update/(.+)', 'api_post_project_create');
 register_route('POST', 'projects/delete/(.+)', 'api_post_project_delete');
